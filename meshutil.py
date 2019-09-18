@@ -46,15 +46,14 @@ class TransformStack(object):
             self.mtx = numpy.identity(4)
         else:
             self.mtx = mtx
+    def _compose(self, mtx2):
+        return TransformStack(mtx2 @ self.mtx)
     def scale(self, *a, **kw):
-        mtx = mtx_scale(*a, **kw)
-        return TransformStack(mtx @ self.mtx)
+        return self._compose(mtx_scale(*a, **kw))
     def translate(self, *a, **kw):
-        mtx = mtx_translate(*a, **kw)
-        return TransformStack(mtx @ self.mtx)
+        return self._compose(mtx_translate(*a, **kw))
     def rotate(self, *a, **kw):
-        mtx = mtx_rotate(*a, **kw)
-        return TransformStack(mtx @ self.mtx)
+        return self._compose(mtx_rotate(*a, **kw))
 
 def mtx_scale(sx, sy=None, sz=None):
     if sy is None:
@@ -105,7 +104,7 @@ def cube(open_xz=False):
         # winding order?
     return FaceVertexMesh(verts, faces)
 
-def cube_distort(angle):
+def cube_distort(angle, open_xz=False):
     q = quat.rotation_quaternion(numpy.array([-1,0,1]), angle)
     ltf2 = quat.conjugate_by(ltf, q)[0,:]
     rtf2 = quat.conjugate_by(rtf, q)[0,:]
@@ -116,7 +115,7 @@ def cube_distort(angle):
         lbf, rbf, ltf2, rtf2,
         lbb, rbb, ltb2, rtb2,
     ], dtype=numpy.float64)
-    if True: #open_xz:
+    if open_xz:
         faces = numpy.zeros((8,3), dtype=int)
     else:
         faces = numpy.zeros((12,3), dtype=int)
@@ -128,7 +127,7 @@ def cube_distort(angle):
     faces[5,:] = [5, 7, 6]
     faces[6,:] = [4, 2, 0]
     faces[7,:] = [4, 6, 2]
-    if False: # not open_xz:
+    if not open_xz:
         faces[8,:]  = [2, 7, 3]
         faces[9,:]  = [2, 6, 7]
         faces[10,:] = [0, 1, 5]
