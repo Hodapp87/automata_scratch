@@ -27,9 +27,10 @@ class FaceVertexMesh(object):
         f2 = numpy.concatenate([self.f, other_mesh.f + self.v.shape[0]])
         m2 = FaceVertexMesh(v2, f2)
         return m2
-    def transform(self, mtx):
+    def transform(self, xform):
+        # Pass a Transform
         vh = numpy.hstack([self.v, numpy.ones((self.v.shape[0], 1), dtype=self.v.dtype)])
-        v2 = vh.dot(mtx.T)[:,0:3]
+        v2 = vh.dot(xform.mtx.T)[:,0:3]
         # TODO: why transpose?
         # TODO: fix homogenous (even if I don't use it)
         return FaceVertexMesh(v2, self.f)
@@ -40,14 +41,14 @@ class FaceVertexMesh(object):
             v[i] = [self.v[iv0], self.v[iv1], self.v[iv2]]
         return stl.mesh.Mesh(data)
 
-class TransformStack(object):
+class Transform(object):
     def __init__(self, mtx=None):
         if mtx is None:
             self.mtx = numpy.identity(4)
         else:
             self.mtx = mtx
     def _compose(self, mtx2):
-        return TransformStack(mtx2 @ self.mtx)
+        return Transform(mtx2 @ self.mtx)
     def scale(self, *a, **kw):
         return self._compose(mtx_scale(*a, **kw))
     def translate(self, *a, **kw):
