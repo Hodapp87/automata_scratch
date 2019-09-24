@@ -135,3 +135,22 @@ def cube_distort(angle, open_xz=False):
         faces[11,:] = [0, 5, 4]
         # winding order?
     return FaceVertexMesh(verts, faces)
+
+def join_boundary_simple(bound1, bound2):
+    # bound1 & bound2 are both arrays of shape (N,3), representing
+    # the points of a boundary.  This joins the two boundaries by
+    # simply connecting quads (made of 2 triangles) straight across.
+    #
+    # Winding will proceed in the direction of the first boundary.
+    #`
+    # Returns FaceVertexMesh.
+    n = bound1.shape[0]
+    vs = numpy.concatenate([bound1, bound2])
+    # Indices 0...N-1 are from bound1, N...2*N-1 are from bound2
+    fs = numpy.zeros((2*n, 3), dtype=int)
+    for i in range(n):
+        v0 = i
+        v1 = (i + 1) % n
+        fs[2*i]     = [n + v1, n + v0, v0]
+        fs[2*i + 1] = [v1,     n + v1, v0]
+    return FaceVertexMesh(vs, fs)
