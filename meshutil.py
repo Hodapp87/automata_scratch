@@ -55,6 +55,9 @@ class Transform(object):
         return self._compose(mtx_translate(*a, **kw))
     def rotate(self, *a, **kw):
         return self._compose(mtx_rotate(*a, **kw))
+    def apply_to(self, vs):
+        vh = numpy.hstack([vs, numpy.ones((vs.shape[0], 1), dtype=vs.dtype)])
+        return vh.dot(self.mtx.T)[:,0:3]
 
 def mtx_scale(sx, sy=None, sz=None):
     if sy is None:
@@ -135,6 +138,21 @@ def cube_distort(angle, open_xz=False):
         faces[11,:] = [0, 5, 4]
         # winding order?
     return FaceVertexMesh(verts, faces)
+
+def subdivide_boundary(bound):
+    # assume bound1 has shape (4,3).
+    # Midpoints of every segment:
+    mids = (bound + numpy.roll(bound, 1, axis=0)) / 2
+    mids_adj = numpy.roll(mids, -1, axis=0)
+    # Centroid:
+    centroid = numpy.mean(bound, axis=0)
+    # Now, every single new boundary has: one vertex of 'bound', an
+    # adjacent midpoint, a centroid, and the other adjacent midpoint.
+    bounds = [
+        numpy.array([bound[i,:], mids[i,:], centroid, mids_adj[i,:]])
+        for i in range(4)
+    ]
+    return bounds
 
 def join_boundary_simple(bound1, bound2):
     # bound1 & bound2 are both arrays of shape (N,3), representing
