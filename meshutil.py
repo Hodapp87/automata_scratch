@@ -28,12 +28,8 @@ class FaceVertexMesh(object):
         m2 = FaceVertexMesh(v2, f2)
         return m2
     def transform(self, xform):
-        # Pass a Transform
-        vh = numpy.hstack([self.v, numpy.ones((self.v.shape[0], 1), dtype=self.v.dtype)])
-        v2 = vh.dot(xform.mtx.T)[:,0:3]
-        # TODO: why transpose?
-        # TODO: fix homogenous (even if I don't use it)
-        return FaceVertexMesh(v2, self.f)
+        # Just transform vertices. Indices don't change.
+        return FaceVertexMesh(xform.apply_to(self.v), self.f)
     def to_stl_mesh(self):
         data = numpy.zeros(self.f.shape[0], dtype=stl.mesh.Mesh.dtype)
         v = data["vectors"]
@@ -48,6 +44,7 @@ class Transform(object):
         else:
             self.mtx = mtx
     def _compose(self, mtx2):
+        # Note pre-multiply. Earlier transforms are done first.
         return Transform(mtx2 @ self.mtx)
     def scale(self, *a, **kw):
         return self._compose(mtx_scale(*a, **kw))
@@ -56,8 +53,11 @@ class Transform(object):
     def rotate(self, *a, **kw):
         return self._compose(mtx_rotate(*a, **kw))
     def apply_to(self, vs):
+        # Homogeneous coords, so append a column of ones. vh is then shape (N,4):
         vh = numpy.hstack([vs, numpy.ones((vs.shape[0], 1), dtype=vs.dtype)])
-        return vh.dot(self.mtx.T)[:,0:3]
+        # As we have row vectors, we're doing basically (A*x)^T=(x^T)*(A^T)
+        # hence transposing the matrix, while vectors are already transposed.
+        return (vh @ self.mtx.T)[:,0:3]
 
 def mtx_scale(sx, sy=None, sz=None):
     if sy is None:
