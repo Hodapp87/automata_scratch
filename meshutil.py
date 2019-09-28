@@ -46,6 +46,8 @@ class Transform(object):
     def _compose(self, mtx2):
         # Note pre-multiply. Earlier transforms are done first.
         return Transform(mtx2 @ self.mtx)
+    def compose(self, xform):
+        return self._compose(xform.mtx)
     def scale(self, *a, **kw):
         return self._compose(mtx_scale(*a, **kw))
     def translate(self, *a, **kw):
@@ -160,7 +162,7 @@ def join_boundary_simple(bound1, bound2):
     # simply connecting quads (made of 2 triangles) straight across.
     #
     # Winding will proceed in the direction of the first boundary.
-    #`
+    #
     # Returns FaceVertexMesh.
     n = bound1.shape[0]
     vs = numpy.concatenate([bound1, bound2])
@@ -171,4 +173,15 @@ def join_boundary_simple(bound1, bound2):
         v1 = (i + 1) % n
         fs[2*i]     = [n + v1, n + v0, v0]
         fs[2*i + 1] = [v1,     n + v1, v0]
+    return FaceVertexMesh(vs, fs)
+
+def close_boundary_simple(bound):
+    # This will fail for any non-convex boundary!
+    centroid = numpy.mean(bound, axis=0)
+    vs = numpy.concatenate([bound, centroid[numpy.newaxis,:]])
+    n = bound.shape[0]
+    # note that n is new the index of the centroid
+    fs = numpy.zeros((n+1, 3), dtype=int)
+    for i in range(n):
+        fs[i] = [i, n, (i+1) % n]
     return FaceVertexMesh(vs, fs)
