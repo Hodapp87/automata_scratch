@@ -36,7 +36,10 @@ class FaceVertexMesh(object):
         for i, (iv0, iv1, iv2) in enumerate(self.f):
             v[i] = [self.v[iv0], self.v[iv1], self.v[iv2]]
         return stl.mesh.Mesh(data)
-
+    @classmethod
+    def Empty(self):
+        return FaceVertexMesh(numpy.zeros((0,3)), numpy.zeros((0,3), dtype=int))
+    
 class Transform(object):
     def __init__(self, mtx=None):
         if mtx is None:
@@ -54,6 +57,8 @@ class Transform(object):
         return self._compose(mtx_translate(*a, **kw))
     def rotate(self, *a, **kw):
         return self._compose(mtx_rotate(*a, **kw))
+    def reflect(self, *a, **kw):
+        return self._compose(mtx_reflect(*a, **kw))
     def apply_to(self, vs):
         # Homogeneous coords, so append a column of ones. vh is then shape (N,4):
         vh = numpy.hstack([vs, numpy.ones((vs.shape[0], 1), dtype=vs.dtype)])
@@ -84,6 +89,18 @@ def mtx_translate(x, y, z):
 def mtx_rotate(axis, angle):
     q = quat.rotation_quaternion(axis, angle)
     return quat.quat2mat(q)
+
+def mtx_reflect(axis):
+    # axis must be norm-1
+    axis = numpy.array(axis)
+    axis = axis / numpy.linalg.norm(axis)
+    a,b,c = axis[0], axis[1], axis[2]
+    return numpy.array([
+        [1-2*a*a, -2*a*b,   -2*a*c,  0],
+        [-2*a*b,  1-2*b*b,  -2*b*c,  0],
+        [-2*a*c,  -2*b*c,   1-2*c*c, 0],
+        [0, 0, 0, 1],
+    ])
 
 def cube(open_xz=False):
     verts = numpy.array([
