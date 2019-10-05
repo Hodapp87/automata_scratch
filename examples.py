@@ -136,6 +136,8 @@ def gen_twisted_boundary(count=4, dx0=2, dz=0.2, ang=0.1):
         [1, 0, 1],
         [0, 0, 1],
     ], dtype=numpy.float64) - [0.5, 0, 0.5]
+    b = meshutil.subdivide_boundary(b)
+    b = meshutil.subdivide_boundary(b)
     # Generate 'seed' transformations:
     xfs = [meshutil.Transform().translate(dx0, 0, 0).rotate([0,1,0], numpy.pi * 2 * i / count)
            for i in range(count)]

@@ -1,6 +1,7 @@
 import stl.mesh
 import numpy
 import quaternion
+import random
 
 import quat
 
@@ -158,7 +159,7 @@ def cube_distort(angle, open_xz=False):
         # winding order?
     return FaceVertexMesh(verts, faces)
 
-def subdivide_boundary(bound):
+def split_boundary(bound):
     # assume bound1 has shape (4,3).
     # Midpoints of every segment:
     mids = (bound + numpy.roll(bound, 1, axis=0)) / 2
@@ -172,6 +173,16 @@ def subdivide_boundary(bound):
         for i in range(4)
     ]
     return bounds
+
+def subdivide_boundary(bound):
+    # assume bound1 has shape (4,3).
+    # Midpoints of every segment:
+    mids = (bound + numpy.roll(bound, -1, axis=0)) / 2
+    b2 = numpy.zeros((bound.shape[0]*2, bound.shape[1]))
+    for i,row in enumerate(bound):
+        b2[2*i,:] = bound[i,:]
+        b2[2*i+1,:] = mids[i,:]
+    return b2
 
 def join_boundary_simple(bound1, bound2):
     # bound1 & bound2 are both arrays of shape (N,3), representing
@@ -188,8 +199,12 @@ def join_boundary_simple(bound1, bound2):
     for i in range(n):
         v0 = i
         v1 = (i + 1) % n
-        fs[2*i]     = [n + v1, n + v0, v0]
-        fs[2*i + 1] = [v1,     n + v1, v0]
+        if random.random() < 0.5:
+            fs[2*i]     = [n + v1, n + v0, v0]
+            fs[2*i + 1] = [v1,     n + v1, v0]
+        else:
+            fs[2*i]     = [n + v1, n + v0, v1]
+            fs[2*i + 1] = [v1,     n + v0, v0]
     return FaceVertexMesh(vs, fs)
 
 def close_boundary_simple(bound):
