@@ -19,8 +19,9 @@ def ram_horn():
     ], dtype=numpy.float64) - [0.5, 0.5, 0]
     xf0_to_1 = meshutil.Transform().translate(0,0,1)
     b1 = xf0_to_1.apply_to(b0)
-    mesh = meshutil.join_boundary_simple(b0, b1)
-    mesh = mesh.concat(meshutil.close_boundary_simple(b0))
+    meshes = []
+    meshes.append(meshutil.join_boundary_simple(b0, b1))
+    meshes.append(meshutil.close_boundary_simple(b0))
     for i in range(4):
         # Opening boundary:
         b = b1
@@ -37,10 +38,10 @@ def ram_horn():
                 .translate(0,0,0.8)
             b_sub1 = incr.compose(xf).apply_to(b)
             m = meshutil.join_boundary_simple(b_sub0, b_sub1)
-            mesh = mesh.concat(m)
+            meshes.append(m)
             xf = incr.compose(xf)
         # Close final boundary:
-        mesh = mesh.concat(meshutil.close_boundary_simple(b_sub1[::-1,:]))
+        meshes.append(meshutil.close_boundary_simple(b_sub1[::-1,:]))
         # ::-1 is to reverse the boundary's order to fix winding order.
         # Not sure of the "right" way to fix winding order here.
         # The boundary vertices go in an identical order... it's just
@@ -51,6 +52,7 @@ def ram_horn():
 
     # I don't need to subdivide *geometry*.
     # I need to subdivide *space* and then put geometry in it.
+    mesh = meshutil.FaceVertexMesh.concat_many(meshes)
     return mesh
 
 # Interlocking twists.
@@ -63,17 +65,13 @@ def twist(ang=0.1, dz=0.2, dx0=2, count=4, scale=0.98):
         [1, 1, 0],
         [0, 1, 0],
     ], dtype=numpy.float64) - [0.5, 0.5, 0]
-    mesh = None
+    meshes = []
     for i in range(count):
         xf = meshutil.Transform() \
             .translate(dx0, 0, 0) \
             .rotate([0,0,1], numpy.pi * 2 * i / count)
         b0 = xf.apply_to(b)
-        m = meshutil.close_boundary_simple(b0)
-        if mesh is None:
-            mesh = m
-        else:
-            mesh = mesh.concat(m)
+        meshes.append(meshutil.close_boundary_simple(b0))
         for layer in range(256):
             b_sub0 = xf.apply_to(b)
             incr = meshutil.Transform() \
@@ -82,10 +80,11 @@ def twist(ang=0.1, dz=0.2, dx0=2, count=4, scale=0.98):
                 .scale(scale)
             b_sub1 = xf.compose(incr).apply_to(b)
             m = meshutil.join_boundary_simple(b_sub0, b_sub1)
-            mesh = mesh.concat(m)
+            meshes.append(m)
             xf = xf.compose(incr)
         # Close final boundary:
-        mesh = mesh.concat(meshutil.close_boundary_simple(b_sub1[::-1,:]))
+        meshes.append(meshutil.close_boundary_simple(b_sub1[::-1,:]))
+    mesh = meshutil.FaceVertexMesh.concat_many(meshes)
     return mesh
 
 def twist_nonlinear(dx0 = 2, dz=0.2, count=3, scale=0.99, layers=100):
@@ -100,17 +99,13 @@ def twist_nonlinear(dx0 = 2, dz=0.2, count=3, scale=0.99, layers=100):
         [1, 1, 0],
         [0, 1, 0],
     ], dtype=numpy.float64) - [0.5, 0.5, 0]
-    mesh = None
+    meshes = []
     for i in range(count):
         xf = meshutil.Transform() \
             .translate(dx0, 0, 0) \
             .rotate([0,0,1], numpy.pi * 2 * i / count)
         b0 = xf.apply_to(b)
-        m = meshutil.close_boundary_simple(b0)
-        if mesh is None:
-            mesh = m
-        else:
-            mesh = mesh.concat(m)
+        meshes.append(meshutil.close_boundary_simple(b0))
         for layer in range(layers):
             b_sub0 = xf.apply_to(b)
             ang = ang_fn(layer)
@@ -120,10 +115,11 @@ def twist_nonlinear(dx0 = 2, dz=0.2, count=3, scale=0.99, layers=100):
                 .scale(scale)
             b_sub1 = xf.compose(incr).apply_to(b)
             m = meshutil.join_boundary_simple(b_sub0, b_sub1)
-            mesh = mesh.concat(m)
+            meshes.append(m)
             xf = xf.compose(incr)
         # Close final boundary:
-        mesh = mesh.concat(meshutil.close_boundary_simple(b_sub1[::-1,:]))
+        meshes.append(meshutil.close_boundary_simple(b_sub1[::-1,:]))
+    mesh = meshutil.FaceVertexMesh.concat_many(meshes)
     return mesh
 
 # Generate a frame with 'count' boundaries in the XZ plane.
@@ -136,6 +132,7 @@ def gen_twisted_boundary(count=4, dx0=2, dz=0.2, ang=0.1):
         [1, 0, 1],
         [0, 0, 1],
     ], dtype=numpy.float64) - [0.5, 0, 0.5]
+    b = meshutil.subdivide_boundary(b)
     b = meshutil.subdivide_boundary(b)
     b = meshutil.subdivide_boundary(b)
     # Generate 'seed' transformations:
@@ -183,29 +180,30 @@ def gen_torus_xy(gen, rad=2, frames=100):
 
 # String together boundaries from a generator.
 # If count is nonzero, run only this many iterations.
-def gen2mesh(gen, count=0, flip_order=False, loop=False):
+def gen2mesh(gen, count=0, flip_order=False, loop=False, join_fn=meshutil.join_boundary_optim):
     # Get first list of boundaries:
     bs_first = next(gen)
     bs_last = bs_first
     # TODO: Begin and end with close_boundary_simple
-    mesh = meshutil.FaceVertexMesh.Empty()
+    meshes = []
     for i,bs_cur in enumerate(gen):
         if count > 0 and i >= count:
             break
         for j,b in enumerate(bs_cur):
             if flip_order:
-                m = meshutil.join_boundary_simple(b, bs_last[j])
+                m = join_fn(b, bs_last[j])
             else:
-                m = meshutil.join_boundary_simple(bs_last[j], b)
-            mesh = mesh.concat(m)
+                m = join_fn(bs_last[j], b)
+            meshes.append(m)
         bs_last = bs_cur
     if loop:
         for b0,b1 in zip(bs_last, bs_first):
             if flip_order:
-                m = meshutil.join_boundary_simple(b1, b0)
+                m = join_fn(b1, b0)
             else:
-                m = meshutil.join_boundary_simple(b0, b1)
-            mesh = mesh.concat(m)
+                m = join_fn(b0, b1)
+            meshes.append(m)
+    mesh = meshutil.FaceVertexMesh.concat_many(meshes)
     return mesh
 
 def twist_from_gen():
@@ -216,11 +214,20 @@ def twist_from_gen():
 # frames = How many step to build this from:
 # turn = How many full turns to make in inner twist
 # count = How many inner twists to have
-def twisty_torus(frames = 200, turns = 4, count = 4, rad = 4):
+def twisty_torus(frames = 5000, turns = 4, count = 4, rad = 4):
     # In order to make this line up properly:
     angle = numpy.pi * 2 * turns / frames
     gen = gen_torus_xy(gen_twisted_boundary(count=count, ang=angle), rad=rad, frames=frames)
     return gen2mesh(gen, 0, flip_order=True, loop=True)
+
+# frames = How many step to build this from:
+# turn = How many full turns to make in inner twist
+# count = How many inner twists to have
+def twisty_torus_opt(frames = 200, turns = 4, count = 4, rad = 4):
+    # In order to make this line up properly:
+    angle = numpy.pi * 2 * turns / frames
+    gen = gen_torus_xy(gen_twisted_boundary(count=count, ang=angle), rad=rad, frames=frames)
+    return gen2mesh(gen, 0, flip_order=True, loop=True, join_fn=meshutil.join_boundary_optim)
 
 def main():
     fns = {

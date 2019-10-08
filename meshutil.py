@@ -38,9 +38,28 @@ class FaceVertexMesh(object):
             v[i] = [self.v[iv0], self.v[iv1], self.v[iv2]]
         return stl.mesh.Mesh(data)
     @classmethod
-    def Empty(self):
+    def Empty(cls):
         return FaceVertexMesh(numpy.zeros((0,3)), numpy.zeros((0,3), dtype=int))
-    
+    @classmethod
+    def concat_many(cls, meshes):
+        nv = 0
+        nf = 0
+        for m in meshes:
+            nv += m.v.shape[0]
+            nf += m.f.shape[0]
+        v = numpy.zeros((nv,3), dtype=numpy.float64)
+        f = numpy.zeros((nf,3), dtype=int)
+        vi = 0
+        fi = 0
+        for m in meshes:
+            vj = vi + m.v.shape[0]
+            fj = fi + m.f.shape[0]
+            v[vi:vj,:] = m.v
+            f[fi:fj,:] = m.f + vi
+            vi = vj
+            fi = fj
+        return FaceVertexMesh(v, f)
+
 class Transform(object):
     def __init__(self, mtx=None):
         if mtx is None:
@@ -206,6 +225,16 @@ def join_boundary_simple(bound1, bound2):
             fs[2*i]     = [n + v1, n + v0, v1]
             fs[2*i + 1] = [v1,     n + v0, v0]
     return FaceVertexMesh(vs, fs)
+
+def join_boundary_optim(bound1, bound2):
+    # bound1 and bound2 must stay in order, but we can rotate
+    # the starting point to whatever we want. Use distance as
+    # a metric:
+    errs = [numpy.linalg.norm(bound1 - numpy.roll(bound2, i, axis=0))
+            for i,_ in enumerate(bound1)]
+    # What shift gives the lowest distance?
+    i = numpy.argmin(errs)
+    return join_boundary_simple(bound1, numpy.roll(bound2, i, axis=0))
 
 def close_boundary_simple(bound):
     # This will fail for any non-convex boundary!
