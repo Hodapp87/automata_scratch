@@ -55,6 +55,45 @@ def ram_horn():
     mesh = meshutil.FaceVertexMesh.concat_many(meshes)
     return mesh
 
+# Rewriting the above in terms of generators & iterated transforms
+def ram_horn_gen(b, xf):
+    while True:
+        b1 = xf.apply_to(b)
+        yield b1
+        incr = meshutil.Transform() \
+            .scale(0.9) \
+            .rotate([-1,0,1], 0.3) \
+            .translate(0,0,0.8)
+        xf = incr.compose(xf)
+
+def ram_horn2():
+    b0 = numpy.array([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 1, 0],
+    ], dtype=numpy.float64) - [0.5, 0.5, 0]
+    xf0_to_1 = meshutil.Transform().translate(0,0,1)
+    b1 = xf0_to_1.apply_to(b0)
+    meshes = []
+    #meshes.append(meshutil.join_boundary_simple(b0, b1))
+    for i in range(4):
+        # Opening boundary:
+        xf = meshutil.Transform() \
+            .translate(0,0,-1) \
+            .scale(0.5) \
+            .translate(0.25,0.25,1) \
+            .rotate([0,0,1], i*numpy.pi/2)
+        b = xf.apply_to(b1)
+        gen = ram_horn_gen(b, xf)
+        mesh = gen2mesh(gen, count=128)
+        print(mesh)
+        meshes.append(mesh)
+        # Close final boundary:
+        meshes.append(meshutil.close_boundary_simple(b_sub1[::-1,:]))
+    mesh = meshutil.FaceVertexMesh.concat_many(meshes)
+    return mesh
+
 # Interlocking twists.
 # ang/dz control resolution. dx0 controls radius. count controls
 # how many twists. scale controls speed they shrink at.
@@ -232,6 +271,7 @@ def twisty_torus_opt(frames = 200, turns = 4, count = 4, rad = 4):
 def main():
     fns = {
         ram_horn: "ramhorn.stl",
+        ram_horn2: "ramhorn2.stl",
         twist: "twist.stl",
         twist_nonlinear: "twist_nonlinear.stl",
         twist_from_gen: "twist_from_gen.stl",
