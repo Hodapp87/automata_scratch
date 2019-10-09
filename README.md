@@ -18,14 +18,6 @@ To-do items, wanted features, bugs:
   
 - Parametrize gen_twisted_boundary over boundaries and
 do my nested spiral
-- Encode the notions of "generator which transforms an
-existing list of boundaries", "generator which transforms
-another generator"
-- This has a lot of functions parametrized over a lot
-of functions.  Need to work with this somehow.
-- Work directly with lists of boundaries. The only thing
-I ever do with them is apply transforms to all of them, or
-join adjacent ones with corresponding elements.
 - Why do I get the weird zig-zag pattern on the triangles,
 despite larger numbers of them? Is it something in how I
 twist the frames?
@@ -47,3 +39,16 @@ Other notes:
 - Picking at random the diagonal on the quad to triangulate with
   does seem to turn 'error' just to noise, and in its own way this
   is preferable.
+
+# Abstractions
+
+- Encode the notions of "generator which transforms an
+existing list of boundaries", "generator which transforms
+another generator"
+- This has a lot of functions parametrized over a lot
+of functions.  Need to work with this somehow.  (e.g. should
+it subdivide this boundary? should it merge opening/closing
+boundaries?)
+- Work directly with lists of boundaries. The only thing
+I ever do with them is apply transforms to all of them, or
+join adjacent ones with corresponding elements.

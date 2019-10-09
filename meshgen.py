@@ -6,32 +6,32 @@ import trimesh
 # Generate a frame with 'count' boundaries in the XZ plane.
 # Each one rotates by 'ang' as it moves by 'dz'.
 # dx0 is center-point distance from each to the origin.
-def gen_twisted_boundary(count=4, dx0=2, dz=0.2, ang=0.1):
-    b = numpy.array([
-        [0, 0, 0],
-        [1, 0, 0],
-        [1, 0, 1],
-        [0, 0, 1],
-    ], dtype=numpy.float64) - [0.5, 0, 0.5]
-    b = meshutil.subdivide_boundary(b)
-    b = meshutil.subdivide_boundary(b)
-    b = meshutil.subdivide_boundary(b)
+def gen_twisted_boundary(bs=None, count=4, dx0=2, dz=0.2, ang=0.1):
+    if bs is None:
+        b = numpy.array([
+            [0, 0, 0],
+            [1, 0, 0],
+            [1, 0, 1],
+            [0, 0, 1],
+        ], dtype=numpy.float64) - [0.5, 0, 0.5]
+        b = meshutil.subdivide_boundary(b)
+        b = meshutil.subdivide_boundary(b)
+        b = meshutil.subdivide_boundary(b)
+        bs = [b]
     # Generate 'seed' transformations:
     xfs = [meshutil.Transform().translate(dx0, 0, 0).rotate([0,1,0], numpy.pi * 2 * i / count)
            for i in range(count)]
     # (we'll increment the transforms in xfs as we go)
     while True:
         xfs_new = []
-        bs = []
         for i, xf in enumerate(xfs):
             # Generate a boundary from running transform:
-            b_i = xf.apply_to(b)
-            bs.append(b_i)
+            bs2 = [xf.apply_to(b) for b in bs]
             # Increment transform i:
             xf2 = xf.rotate([0,1,0], ang)
             xfs_new.append(xf2)
         xfs = xfs_new
-        yield bs
+        yield bs2
 
 # This is to see how well it works to compose generators:
 def gen_inc_y(gen, dy=0.1):

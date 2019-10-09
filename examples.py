@@ -161,7 +161,17 @@ def twist_nonlinear(dx0 = 2, dz=0.2, count=3, scale=0.99, layers=100):
     return mesh
 
 def twist_from_gen():
-    gen = meshgen.gen_inc_y(meshgen.gen_twisted_boundary())
+    b = numpy.array([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 0, 1],
+        [0, 0, 1],
+    ], dtype=numpy.float64) - [0.5, 0, 0.5]
+    b = meshutil.subdivide_boundary(b)
+    b = meshutil.subdivide_boundary(b)
+    b = meshutil.subdivide_boundary(b)
+    bs = [b]
+    gen = meshgen.gen_inc_y(meshgen.gen_twisted_boundary(bs))
     mesh = meshgen.gen2mesh(gen, 100, True)
     return mesh
 
@@ -169,19 +179,20 @@ def twist_from_gen():
 # turn = How many full turns to make in inner twist
 # count = How many inner twists to have
 def twisty_torus(frames = 200, turns = 4, count = 4, rad = 4):
+    b = numpy.array([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 0, 1],
+        [0, 0, 1],
+    ], dtype=numpy.float64) - [0.5, 0, 0.5]
+    b = meshutil.subdivide_boundary(b)
+    b = meshutil.subdivide_boundary(b)
+    b = meshutil.subdivide_boundary(b)
+    bs = [b]
     # In order to make this line up properly:
     angle = numpy.pi * 2 * turns / frames
-    gen = meshgen.gen_torus_xy(meshgen.gen_twisted_boundary(count=count, ang=angle), rad=rad, frames=frames)
+    gen = meshgen.gen_torus_xy(meshgen.gen_twisted_boundary(bs=bs, count=count, ang=angle), rad=rad, frames=frames)
     return meshgen.gen2mesh(gen, 0, flip_order=True, loop=True)
-
-# frames = How many step to build this from:
-# turn = How many full turns to make in inner twist
-# count = How many inner twists to have
-def twisty_torus_opt(frames = 200, turns = 4, count = 4, rad = 4):
-    # In order to make this line up properly:
-    angle = numpy.pi * 2 * turns / frames
-    gen = meshgen.gen_torus_xy(meshgen.gen_twisted_boundary(count=count, ang=angle), rad=rad, frames=frames)
-    return meshgen.gen2mesh(gen, 0, flip_order=True, loop=True, join_fn=meshutil.join_boundary_optim)
 
 def main():
     fns = {
