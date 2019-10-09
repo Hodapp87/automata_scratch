@@ -203,7 +203,7 @@ def subdivide_boundary(bound):
         b2[2*i+1,:] = mids[i,:]
     return b2
 
-def join_boundary_simple(bound1, bound2):
+def join_boundary_simple(bound1, bound2, random_diag=False):
     # bound1 & bound2 are both arrays of shape (N,3), representing
     # the points of a boundary.  This joins the two boundaries by
     # simply connecting quads (made of 2 triangles) straight across.
@@ -218,7 +218,7 @@ def join_boundary_simple(bound1, bound2):
     for i in range(n):
         v0 = i
         v1 = (i + 1) % n
-        if random.random() < 0.5:
+        if random_diag and random.random() < 0.5:
             fs[2*i]     = [n + v1, n + v0, v0]
             fs[2*i + 1] = [v1,     n + v1, v0]
         else:
