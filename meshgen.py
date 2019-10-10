@@ -6,6 +6,9 @@ import trimesh
 # Generate a frame with 'count' boundaries in the XZ plane.
 # Each one rotates by 'ang' as it moves by 'dz'.
 # dx0 is center-point distance from each to the origin.
+#
+# TODO: This needs to transform an existing generator, not just
+# a boundary!
 def gen_twisted_boundary(bs=None, count=4, dx0=2, dz=0.2, ang=0.1):
     if bs is None:
         b = numpy.array([
