@@ -1,35 +1,34 @@
+import itertools
+
 import meshutil
 import stl.mesh
 import numpy
 import trimesh
 
 # Generate a frame with 'count' boundaries in the XZ plane.
-# Each one rotates by 'ang' as it moves by 'dz'.
+# Each one rotates by 'ang' at each step.
 # dx0 is center-point distance from each to the origin.
 #
-# TODO: This needs to transform an existing generator, not just
-# a boundary!
-def gen_twisted_boundary(bs=None, count=4, dx0=2, dz=0.2, ang=0.1):
-    if bs is None:
+# This doesn't generate usable geometry on its own.
+def gen_twisted_boundary(gen=None, count=4, dx0=2, ang=0.1):
+    if gen is None:
         b = numpy.array([
             [0, 0, 0],
             [1, 0, 0],
             [1, 0, 1],
             [0, 0, 1],
         ], dtype=numpy.float64) - [0.5, 0, 0.5]
-        b = meshutil.subdivide_boundary(b)
-        b = meshutil.subdivide_boundary(b)
-        b = meshutil.subdivide_boundary(b)
-        bs = [b]
+        gen = itertools.repeat([b])
     # Generate 'seed' transformations:
     xfs = [meshutil.Transform().translate(dx0, 0, 0).rotate([0,1,0], numpy.pi * 2 * i / count)
            for i in range(count)]
     # (we'll increment the transforms in xfs as we go)
-    while True:
+    for bs in gen:
         xfs_new = []
+        bs2 = []
         for i, xf in enumerate(xfs):
             # Generate a boundary from running transform:
-            bs2 = [xf.apply_to(b) for b in bs]
+            bs2 += [xf.apply_to(b) for b in bs]
             # Increment transform i:
             xf2 = xf.rotate([0,1,0], ang)
             xfs_new.append(xf2)

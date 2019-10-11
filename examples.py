@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-import stl.mesh
+import itertools
+
 import numpy
+import stl.mesh
 import trimesh
 
 import meshutil
@@ -171,7 +173,9 @@ def twist_from_gen():
     b = meshutil.subdivide_boundary(b)
     b = meshutil.subdivide_boundary(b)
     bs = [b]
-    gen = meshgen.gen_inc_y(meshgen.gen_twisted_boundary(bs))
+    # since it needs a generator:
+    gen_inner = itertools.repeat(bs)
+    gen = meshgen.gen_inc_y(meshgen.gen_twisted_boundary(gen_inner))
     mesh = meshgen.gen2mesh(gen, 100, True)
     return mesh
 
@@ -189,10 +193,53 @@ def twisty_torus(frames = 200, turns = 4, count = 4, rad = 4):
     b = meshutil.subdivide_boundary(b)
     b = meshutil.subdivide_boundary(b)
     bs = [b]
+    # since it needs a generator:
+    gen_inner = itertools.repeat(bs)
     # In order to make this line up properly:
     angle = numpy.pi * 2 * turns / frames
-    gen = meshgen.gen_torus_xy(meshgen.gen_twisted_boundary(bs=bs, count=count, ang=angle), rad=rad, frames=frames)
+    gen = meshgen.gen_torus_xy(meshgen.gen_twisted_boundary(gen=gen_inner, count=count, ang=angle), rad=rad, frames=frames)
     return meshgen.gen2mesh(gen, 0, flip_order=True, loop=True)
+
+def spiral_nested_2():
+    # Slow.
+    b = numpy.array([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 0, 1],
+        [0, 0, 1],
+    ], dtype=numpy.float64) - [0.5, 0, 0.5]
+    b *= 0.3
+    b = meshutil.subdivide_boundary(b)
+    b = meshutil.subdivide_boundary(b)
+    bs = [b]
+    # since it needs a generator:
+    gen1 = itertools.repeat(bs)
+    gen2 = meshgen.gen_twisted_boundary(gen1, ang=-0.2, dx0=0.5)
+    gen3 = meshgen.gen_twisted_boundary(gen2, ang=0.05, dx0=1)
+    gen = meshgen.gen_inc_y(gen3, dy=0.1)
+    return meshgen.gen2mesh(
+        gen, count=250, flip_order=True, close_first=True, close_last=True)
+
+def spiral_nested_3():
+    # Slower.
+    b = numpy.array([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 0, 1],
+        [0, 0, 1],
+    ], dtype=numpy.float64) - [0.5, 0, 0.5]
+    b *= 0.3
+    b = meshutil.subdivide_boundary(b)
+    b = meshutil.subdivide_boundary(b)
+    bs = [b]
+    # since it needs a generator:
+    gen1 = itertools.repeat(bs)
+    gen2 = meshgen.gen_twisted_boundary(gen1, ang=-0.2, dx0=0.5)
+    gen3 = meshgen.gen_twisted_boundary(gen2, ang=0.07, dx0=1)
+    gen4 = meshgen.gen_twisted_boundary(gen3, ang=-0.03, dx0=3)
+    gen = meshgen.gen_inc_y(gen4, dy=0.1)
+    return meshgen.gen2mesh(
+        gen, count=500, flip_order=True, close_first=True, close_last=True)
 
 def main():
     fns = {
@@ -202,6 +249,8 @@ def main():
         twist_nonlinear: "twist_nonlinear.stl",
         twist_from_gen: "twist_from_gen.stl",
         twisty_torus: "twisty_torus.stl",
+        spiral_nested_2: "spiral_nested_2.stl",
+        spiral_nested_3: "spiral_nested_3.stl",
     }
     for f in fns:
         fname = fns[f]
