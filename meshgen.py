@@ -66,7 +66,7 @@ def gen_torus_xy(gen, rad=2, frames=100):
 def gen2mesh(gen, count=0, flip_order=False, loop=False,
              close_first = False,
              close_last = False,
-             join_fn=meshutil.join_boundary_optim):
+             join_fn=meshutil.join_boundary_simple):
     # Get first list of boundaries:
     bs_first = next(gen)
     bs_last = bs_first

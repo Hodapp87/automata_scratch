@@ -7,6 +7,10 @@
   have in my notes, then this still lets me split any way I want
   to without having to worry about joining N boundaries instead
   of 2, doesn't it?
+  - Note that for this to work right, either gen2mesh has to be
+    called separately on every straight portion, or I have to
+    make a version of gen2mesh that can handle something more
+    like trees of boundaries, not just flat lists.
 - More complicated: Examples of *merging*. I'm not sure on the theory
   behind this.
   

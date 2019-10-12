@@ -95,6 +95,23 @@ def ram_horn2():
     mesh = meshutil.FaceVertexMesh.concat_many(meshes)
     return mesh
 
+def branch_test():
+    b0 = numpy.array([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 1, 0],
+    ], dtype=numpy.float64) - [0.5, 0.5, 0]
+    parts = [meshutil.Transform().scale(0.5).translate(dx, dy, 1)
+             for dx in (-0.25,+0.25) for dy in (-0.25,+0.25)]
+    xf = meshutil.Transform().translate(0,0,0.1).scale(0.95)
+    def gen():
+        b = b0
+        for i in range(10):
+            b = xf.apply_to(b)
+            yield [b]
+    return meshgen.gen2mesh(gen(), close_first=True, close_last=True)
+
 # Interlocking twists.
 # ang/dz control resolution. dx0 controls radius. count controls
 # how many twists. scale controls speed they shrink at.
