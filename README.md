@@ -14,7 +14,9 @@
 - More complicated: Examples of *merging*. I'm not sure on the theory
   behind this.
   
-## Annoying
+## Annoying/boring
+- https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
+  fix my wave example!
 - I really need to standardize some of the behavior of fundamental
   operations (with regard to things like sizes they generate). This
   is behavior that, if it changes, will change a lot of things that I'm
@@ -43,6 +45,7 @@
   - Picking at random the diagonal on the quad to triangulate with
     does seem to turn 'error' just to noise, and in its own way this
     is preferable.
+- Integrate parallel_transport work and reuse what I can
 
 ## Abstractions
 
