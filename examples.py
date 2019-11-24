@@ -8,6 +8,7 @@ import trimesh
 
 import meshutil
 import meshgen
+import cage
 
 # I should be moving some of these things out into more of a
 # standard library than an 'examples' script
@@ -93,6 +94,37 @@ def ram_horn2():
         mesh = meshgen.gen2mesh(gen, count=128, close_last=True)
         meshes.append(mesh)
     mesh = meshutil.FaceVertexMesh.concat_many(meshes)
+    return mesh
+
+# Rewriting the above rewrite in terms of Cage
+def ram_horn3():
+    center = meshutil.Transform().translate(-0.5, -0.5, 0)
+    cage0 = cage.Cage.from_arrays([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 1, 0],
+    ]).transform(center)
+    xf0_to_1 = meshutil.Transform().translate(0, 0, 1)
+    cage1 = cage0.transform(xf0_to_1)
+    opening_boundary = lambda i: meshutil.Transform() \
+                                         .translate(0,0,-1) \
+                                         .scale(0.5) \
+                                         .translate(0.25,0.25,1) \
+                                         .rotate([0,0,1], i*numpy.pi/2)
+    def recur(xf):
+        while True:
+            cage2 = cage1.transform(xf)
+            yield cage2
+            incr = meshutil.Transform() \
+                .scale(0.9) \
+                .rotate([-1,0,1], 0.3) \
+                .translate(0,0,0.8)
+            xf = incr.compose(xf)
+    gens = [cage.CageGen(recur(opening_boundary(i))) for i in range(4)]
+    cg = cage.CageGen(itertools.chain([cage0, cage1, cage.CageFork(gens)]))
+    # TODO: if this is just a list it seems silly to require itertools
+    mesh = cg.to_mesh(count=128, close_first=True, close_last=True)
     return mesh
 
 def branch_test():
@@ -262,6 +294,7 @@ def main():
     fns = {
         ram_horn: "ramhorn.stl",
         ram_horn2: "ramhorn2.stl",
+        ram_horn3: "ramhorn3.stl",
         twist: "twist.stl",
         twist_nonlinear: "twist_nonlinear.stl",
         twist_from_gen: "twist_from_gen.stl",

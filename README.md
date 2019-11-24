@@ -49,17 +49,10 @@
 
 ## Abstractions
 
-- Encode the notions of "generator which transforms an
-  existing list of boundaries", "generator which transforms
-  another generator"
 - This has a lot of functions parametrized over a lot
   of functions.  Need to work with this somehow.  (e.g. should
   it subdivide this boundary? should it merge opening/closing
   boundaries?)
-- Work directly with lists of boundaries. The only thing
-  I ever do with them is apply transforms to all of them, or
-  join adjacent ones with corresponding elements.
-
 - Some generators produce boundaries that can be directly merged
   and produce sensible geometry.  Some generators produce
   boundaries that are only usable when they are further
@@ -70,6 +63,9 @@
   they are all scaled in the correct way (some linearly, others
   inversely perhaps), generated geometry that is more or less
   identical except that it is higher-resolution?
+- Use mixins to extend 3D transformations to things (matrices,
+  cages, meshes, existing transformations)
+  
 ## ????
 - Embed this in Blender?
   
