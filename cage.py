@@ -69,10 +69,13 @@ class CageGen(object):
         self.gen = gen
     def to_mesh(self, count=None, flip_order=False, loop=False, close_first=False,
                 close_last=False, join_fn=meshutil.join_boundary_simple):
+        print("to_mesh(count={})".format(count))
         # Get 'opening' polygons of generator:
         cage_first = next(self.gen)
+        # TODO: Avoid 'next' here so that we can use a list, not solely a
+        # generator/iterator.
         if cage_first.is_fork():
-            # TODO: Can it be a fork?
+            # TODO: Can it be a fork? Does that make sense?
             raise Exception("First element in CageGen can't be a fork.")
         cage_last = cage_first
         meshes = []

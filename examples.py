@@ -112,16 +112,56 @@ def ram_horn3():
                                          .scale(0.5) \
                                          .translate(0.25,0.25,1) \
                                          .rotate([0,0,1], i*numpy.pi/2)
+    incr = meshutil.Transform() \
+                   .scale(0.9) \
+                   .rotate([-1,0,1], 0.3) \
+                   .translate(0,0,0.8)
     def recur(xf):
         while True:
             cage2 = cage1.transform(xf)
             yield cage2
-            incr = meshutil.Transform() \
-                .scale(0.9) \
-                .rotate([-1,0,1], 0.3) \
-                .translate(0,0,0.8)
             xf = incr.compose(xf)
+    # TODO: I think there is a way to express 'recur' in the form of
+    # itertools.accumulate, and it might be clearer. This function is
+    # just iteratively re-composing 'incr' into a seed transformation,
+    # and applying this transformation (at every stage) to the same
+    # mesh.
     gens = [cage.CageGen(recur(opening_boundary(i))) for i in range(4)]
+    cg = cage.CageGen(itertools.chain([cage0, cage1, cage.CageFork(gens)]))
+    # TODO: if this is just a list it seems silly to require itertools
+    mesh = cg.to_mesh(count=128, close_first=True, close_last=True)
+    return mesh
+
+def ram_horn_branch():
+    center = meshutil.Transform().translate(-0.5, -0.5, 0)
+    cage0 = cage.Cage.from_arrays([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 1, 0],
+    ]).transform(center)
+    xf0_to_1 = meshutil.Transform().translate(0, 0, 1)
+    cage1 = cage0.transform(xf0_to_1)
+    opening_boundary = lambda i: meshutil.Transform() \
+                                         .translate(0,0,-1) \
+                                         .scale(0.5) \
+                                         .translate(0.25,0.25,1) \
+                                         .rotate([0,0,1], i*numpy.pi/2)
+    incr = meshutil.Transform() \
+                   .scale(0.9) \
+                   .rotate([-1,0,1], 0.3) \
+                   .translate(0,0,0.8)
+    def recur(xf, count):
+        for i in range(count):
+            cage2 = cage1.transform(xf)
+            yield cage2
+            xf0 = xf
+            xf = incr.compose(xf)
+        gens = [cage.CageGen(recur(xf0.compose(opening_boundary(i)), 64)) for i in range(4)]
+        # TODO: Above is wrong, but I'm not sure what's right.
+        # No, it's not post-composing either.
+        yield cage.CageFork(gens)
+    gens = [cage.CageGen(recur(opening_boundary(i), 64)) for i in range(4)]
     cg = cage.CageGen(itertools.chain([cage0, cage1, cage.CageFork(gens)]))
     # TODO: if this is just a list it seems silly to require itertools
     mesh = cg.to_mesh(count=128, close_first=True, close_last=True)
@@ -295,6 +335,7 @@ def main():
         ram_horn: "ramhorn.stl",
         ram_horn2: "ramhorn2.stl",
         ram_horn3: "ramhorn3.stl",
+        ram_horn_branch: "ramhorn_branch.stl",
         twist: "twist.stl",
         twist_nonlinear: "twist_nonlinear.stl",
         twist_from_gen: "twist_from_gen.stl",
