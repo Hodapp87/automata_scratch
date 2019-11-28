@@ -151,20 +151,34 @@ def ram_horn_branch():
                    .scale(0.9) \
                    .rotate([-1,0,1], 0.3) \
                    .translate(0,0,0.8)
-    def recur(xf, count):
+    def recur(xf, cage0, count):
         for i in range(count):
-            cage2 = cage1.transform(xf)
-            yield cage2
+            yield cage0.transform(xf)
             xf0 = xf
             xf = incr.compose(xf)
-        gens = [cage.CageGen(recur(xf0.compose(opening_boundary(i)), 64)) for i in range(4)]
-        # TODO: Above is wrong, but I'm not sure what's right.
-        # No, it's not post-composing either.
+        # .compose(opening_boundary(i))
+        def xf_sub(i):
+            # yes, I can do this in a one-liner
+            if i == 0:
+                dx, dy = 0.25, 0.25
+            elif i == 1:
+                dx, dy = -0.25, 0.25
+            elif i == 2:
+                dx, dy = -0.25, -0.25
+            elif i == 3:
+                dx, dy = 0.25, -0.25
+            return meshutil.Transform() \
+                           .translate(dx, dy, 0) \
+                           .rotate([0,0,1], i*numpy.pi/2) \
+                           .translate(-dx, -dy, 0)
+        gens = [cage.CageGen(recur(xf_sub(i).compose(xf0), cage_sub, 8))
+                for i,cage_sub in
+                enumerate(cage0.subdivide_deprecated())]
         yield cage.CageFork(gens)
-    gens = [cage.CageGen(recur(opening_boundary(i), 64)) for i in range(4)]
+    gens = [cage.CageGen(recur(opening_boundary(i), cage1, 8)) for i in range(4)]
     cg = cage.CageGen(itertools.chain([cage0, cage1, cage.CageFork(gens)]))
     # TODO: if this is just a list it seems silly to require itertools
-    mesh = cg.to_mesh(count=128, close_first=True, close_last=True)
+    mesh = cg.to_mesh(count=32, close_first=True, close_last=True)
     return mesh
 
 def branch_test():

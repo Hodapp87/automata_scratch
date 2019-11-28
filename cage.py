@@ -43,7 +43,21 @@ class Cage(object):
                 yield self.verts[n0:n1,:]
             else:
                 yield self.verts[n0:,:]
-            
+    def subdivide_deprecated(self):
+        # assume self.verts has shape (4,3).
+        # Midpoints of every segment:
+        mids = (self.verts + numpy.roll(self.verts, 1, axis=0)) / 2
+        mids_adj = numpy.roll(mids, -1, axis=0)
+        # Centroid:
+        centroid = numpy.mean(self.verts, axis=0)
+        # Now, every single new boundary has: one vertex of 'bound', an
+        # adjacent midpoint, a centroid, and the other adjacent midpoint.
+        cages = [
+            Cage(numpy.array([self.verts[i,:], mids[i,:], centroid, mids_adj[i,:]]),
+                 self.splits)
+            for i in range(4)
+        ]
+        return cages
     def is_fork(self):
         return False
     def transform(self, xform):
@@ -69,7 +83,7 @@ class CageGen(object):
         self.gen = gen
     def to_mesh(self, count=None, flip_order=False, loop=False, close_first=False,
                 close_last=False, join_fn=meshutil.join_boundary_simple):
-        print("to_mesh(count={})".format(count))
+        #print("to_mesh(count={})".format(count))
         # Get 'opening' polygons of generator:
         cage_first = next(self.gen)
         # TODO: Avoid 'next' here so that we can use a list, not solely a
