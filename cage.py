@@ -53,10 +53,12 @@ class Cage(object):
         # Now, every single new boundary has: one vertex of 'bound', an
         # adjacent midpoint, a centroid, and the other adjacent midpoint.
         cages = [
-            Cage(numpy.array([self.verts[i,:], mids[i,:], centroid, mids_adj[i,:]]),
+            Cage(numpy.array([self.verts[i,:], mids[i,:], centroid, mids_adj[i,:]])[::-1,:],
                  self.splits)
             for i in range(4)
         ]
+        # TODO: Figure out why I have to have the [::-1,:] above to
+        # fix the winding order
         return cages
     def is_fork(self):
         return False
@@ -111,8 +113,9 @@ class CageGen(object):
                 # (e.g. loop with fork)
                 for gen in cage_cur.gens:
                     m = gen.to_mesh(count=count - i, flip_order=flip_order, loop=loop,
-                                    close_first=close_first, close_last=close_last,
+                                    close_first=False, close_last=False,
                                     join_fn=join_fn)
+                    # TODO: How do I handle closing with CageFork?
                     meshes.append(m)
                 # A fork can be only the final element, so disregard anything
                 # after one and just quit:

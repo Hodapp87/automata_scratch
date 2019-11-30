@@ -140,21 +140,14 @@ def ram_horn_branch():
         [1, 1, 0],
         [0, 1, 0],
     ]).transform(center)
-    xf0_to_1 = meshutil.Transform().translate(0, 0, 1)
-    cage1 = cage0.transform(xf0_to_1)
-    opening_boundary = lambda i: meshutil.Transform() \
-                                         .translate(0,0,-1) \
-                                         .scale(0.5) \
-                                         .translate(0.25,0.25,1) \
-                                         .rotate([0,0,1], i*numpy.pi/2)
     incr = meshutil.Transform() \
                    .scale(0.9) \
                    .rotate([-1,0,1], 0.3) \
                    .translate(0,0,0.8)
-    def recur(xf, cage0, count):
+    def recur(xf, cage1, count):
         for i in range(count):
             if i > 0:
-                yield cage0.transform(xf)
+                yield cage1.transform(xf)
             xf0 = xf
             xf = incr.compose(xf)
         # .compose(opening_boundary(i))
@@ -177,10 +170,12 @@ def ram_horn_branch():
                     [cage_sub.transform(xf0)],
                     recur(xf_sub(i).compose(xf0), cage_sub, 8)))
                 for i,cage_sub in
-                enumerate(cage0.subdivide_deprecated())]
+                enumerate(cage1.subdivide_deprecated())]
         yield cage.CageFork(gens)
-    gens = [cage.CageGen(recur(opening_boundary(i), cage1, 8)) for i in range(4)]
-    cg = cage.CageGen(itertools.chain([cage0, cage1, cage.CageFork(gens)]))
+    cg = cage.CageGen(itertools.chain(
+        [cage0],
+        recur(meshutil.Transform(), cage0, 8),
+    ))
     # TODO: if this is just a list it seems silly to require itertools
     mesh = cg.to_mesh(count=32, close_first=True, close_last=True)
     return mesh
