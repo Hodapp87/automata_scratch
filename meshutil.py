@@ -79,6 +79,8 @@ class Transform(object):
         return self._compose(mtx_rotate(*a, **kw))
     def reflect(self, *a, **kw):
         return self._compose(mtx_reflect(*a, **kw))
+    def identity(self, *a, **kw):
+        return self._compose(mtx_identity(*a, **kw))
     def apply_to(self, vs):
         # Homogeneous coords, so append a column of ones. vh is then shape (N,4):
         vh = numpy.hstack([vs, numpy.ones((vs.shape[0], 1), dtype=vs.dtype)])
@@ -121,6 +123,9 @@ def mtx_reflect(axis):
         [-2*a*c,  -2*b*c,   1-2*c*c, 0],
         [0, 0, 0, 1],
     ])
+
+def mtx_identity():
+    return numpy.eye(4)
 
 def cube(open_xz=False):
     verts = numpy.array([

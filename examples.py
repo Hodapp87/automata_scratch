@@ -153,12 +153,14 @@ def ram_horn_branch():
                    .translate(0,0,0.8)
     def recur(xf, cage0, count):
         for i in range(count):
-            yield cage0.transform(xf)
+            if i > 0:
+                yield cage0.transform(xf)
             xf0 = xf
             xf = incr.compose(xf)
         # .compose(opening_boundary(i))
         def xf_sub(i):
             # yes, I can do this in a one-liner
+            # yes, it should be normalized, but I reused from something else
             if i == 0:
                 dx, dy = 0.25, 0.25
             elif i == 1:
@@ -167,11 +169,13 @@ def ram_horn_branch():
                 dx, dy = -0.25, -0.25
             elif i == 3:
                 dx, dy = 0.25, -0.25
-            return meshutil.Transform() \
-                           .translate(dx, dy, 0) \
-                           .rotate([0,0,1], i*numpy.pi/2) \
-                           .translate(-dx, -dy, 0)
-        gens = [cage.CageGen(recur(xf_sub(i).compose(xf0), cage_sub, 8))
+            return meshutil.Transform().rotate([-dy,dx,0], -numpy.pi/4)
+        # this has to begin with cage_sub, prior to xf_sub(i) being
+        # composed in, because only this lines up with where the last
+        # frame finished
+        gens = [cage.CageGen(itertools.chain(
+                    [cage_sub.transform(xf0)],
+                    recur(xf_sub(i).compose(xf0), cage_sub, 8)))
                 for i,cage_sub in
                 enumerate(cage0.subdivide_deprecated())]
         yield cage.CageFork(gens)
