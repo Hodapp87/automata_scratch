@@ -46,19 +46,21 @@ class Cage(object):
     def subdivide_deprecated(self):
         # assume self.verts has shape (4,3).
         # Midpoints of every segment:
-        mids = (self.verts + numpy.roll(self.verts, 1, axis=0)) / 2
-        mids_adj = numpy.roll(mids, -1, axis=0)
+        mids = (self.verts + numpy.roll(self.verts, -1, axis=0)) / 2
         # Centroid:
         centroid = numpy.mean(self.verts, axis=0)
         # Now, every single new boundary has: one vertex of 'bound', an
         # adjacent midpoint, a centroid, and the other adjacent midpoint.
-        cages = [
-            Cage(numpy.array([self.verts[i,:], mids[i,:], centroid, mids_adj[i,:]])[::-1,:],
-                 self.splits)
-            for i in range(4)
+        arrs = [
+                [self.verts[0,:], mids[0,:],       centroid,        mids[3,:]],
+                [mids[0,:],       self.verts[1,:], mids[1,:],       centroid],
+                [centroid,        mids[1,:],       self.verts[2,:], mids[2,:]],
+                [mids[3,:],       centroid,        mids[2,:],       self.verts[3,:]],
         ]
-        # TODO: Figure out why I have to have the [::-1,:] above to
-        # fix the winding order
+        # The above respects winding order and should not add any rotation.
+        # I'm sure it has a pattern I can factor out, but I've not tried
+        # yet.
+        cages = [Cage(numpy.array(a), self.splits) for a in arrs]
         return cages
     def is_fork(self):
         return False
