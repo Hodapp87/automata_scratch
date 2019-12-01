@@ -1,22 +1,13 @@
 # To-do items, wanted features, bugs:
 
 ## Cool
-- Examples of branching. This will probably need recursion via functions
-  (or an explicit stack some other way).  If I simply
-  split a boundary into sub-boundaries per the rules I already
-  have in my notes, then this still lets me split any way I want
-  to without having to worry about joining N boundaries instead
-  of 2, doesn't it?
-  - Note that for this to work right, either gen2mesh has to be
-    called separately on every straight portion, or I have to
-    make a version of gen2mesh that can handle something more
-    like trees of boundaries, not just flat lists.
 - More complicated: Examples of *merging*. I'm not sure on the theory
   behind this.
   
 ## Annoying/boring
 - https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
   fix my wave example!
+  - http://www.polygontriangulation.com/2018/07/triangulation-algorithm.html
 - I really need to standardize some of the behavior of fundamental
   operations (with regard to things like sizes they generate). This
   is behavior that, if it changes, will change a lot of things that I'm

@@ -155,14 +155,14 @@ def ram_horn_branch():
             # yes, I can do this in a one-liner
             # yes, it should be normalized, but I reused from something else
             if i == 0:
-                dx, dy = 0.25, 0.25
+                dx, dy = 1, 1
             elif i == 1:
-                dx, dy = -0.25, 0.25
+                dx, dy = -1, 1
             elif i == 2:
-                dx, dy = -0.25, -0.25
+                dx, dy = -1, -1
             elif i == 3:
-                dx, dy = 0.25, -0.25
-            return meshutil.Transform().rotate([-dy,dx,0], -numpy.pi/4)
+                dx, dy = 1, -1
+            return meshutil.Transform().rotate([-dy,dx,0], -numpy.pi/6)
         # this has to begin with cage_sub, prior to xf_sub(i) being
         # composed in, because only this lines up with where the last
         # frame finished
