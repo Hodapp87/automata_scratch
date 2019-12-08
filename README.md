@@ -5,6 +5,7 @@
   behind this.
   
 ## Annoying/boring
+- Make branching properly close the final boundaries.
 - https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
   fix my wave example!
   - http://www.polygontriangulation.com/2018/07/triangulation-algorithm.html
@@ -37,6 +38,8 @@
     does seem to turn 'error' just to noise, and in its own way this
     is preferable.
 - Integrate parallel_transport work and reuse what I can
+- /mnt/dev/graphics_misc/isosurfaces_2018_2019 - perhaps include my
+  spiral isosurface stuff from here
 
 ## Abstractions
 
