@@ -106,6 +106,10 @@ class CageGen(object):
         for i, cage_cur in enumerate(self.gen):
             #print("{}: {}".format(i, cage_cur))
             if count is not None and i >= count:
+                # We stop recursing here, so close things off if needed:
+                if close_last:
+                    for poly in cage_last.polys():
+                        meshes.append(meshutil.close_boundary_simple(poly))
                 break
             # If it's a fork, then recursively generate all the geometry
             # from them, depth-first:
