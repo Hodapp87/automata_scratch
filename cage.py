@@ -67,6 +67,49 @@ class Cage(object):
     def transform(self, xform):
         """Apply a Transform to all vertices, returning a new Cage."""
         return Cage(xform.apply_to(self.verts), self.splits)
+    def classify_overlap(self, cage):
+        """Classifies each vertex in a second cage according to some rules.
+        Returns v, an array of equal length to cage.verts, for which v[i] will
+        equal 0, 1, 2, or 3 based on how cage.verts[i] was classified.
+        
+        (This is mostly used in order to verify that certain rules are
+        followed when a mesh is undergoing forking/branching.)
+        
+        The meaning of v[i] is as follows:
+        0 -- None of the below apply to cage.verts[i].
+        1 -- cage.verts[i] lies on an edge in this Cage (i.e. self).
+        2 -- cage.verts[i] equals another (different) vertex in cage.verts,
+             and case 1 does not apply.
+        3 -- cage.verts[i] equals a vertex in self.verts.
+        """
+        v = numpy.array((cage.shape[0],) dtype=numpy.uint8)
+        for i,vert in enumerate(cage.verts):
+            # Check against every vert in self.verts:
+            for j,vert2 in enumerate(self.verts):
+                if numpy.allclose(vert, vert2):
+                    v[i] = 3
+                    break
+            if v[i] > 0:
+                continue
+            # Check against every edge in self.verts:
+            for poly in self.polys():
+                # TODO:
+                # Check if 'vert' lies within some threshold of each edge
+                # in 'poly'.
+                # Note that 'poly' is cyclic - index (N-1) to 0 is an edge.
+                raise Exception("Not implemented")
+            if v[i] > 0:
+                continue
+            # Check against every *other* vert in cage.verts:
+            for j,vert2 in enumerate(cage.verts):
+                if i == j:
+                    continue
+                if numpy.allclose(vert, vert2):
+                    v[i] = 2
+                    break
+            if v[i] > 0:
+                continue
+        return v
 
 class CageFork(object):
     """A series of generators that all split off in such a way that their
@@ -122,8 +165,11 @@ class CageGen(object):
                     m = gen.to_mesh(count=count - i, flip_order=flip_order, loop=loop,
                                     close_first=False, close_last=close_last,
                                     join_fn=join_fn)
-                    # TODO: How do I handle closing with CageFork?
                     meshes.append(m)
+                    # TODO: This has bugs that produce non-manifold geometry.
+                    # Whatever the next generator *starts* with, I may need
+                    # to subdivide where I *end*: all of their edges must be
+                    # shared (not just incident).
                 # A fork can be only the final element, so disregard anything
                 # after one and just quit:
                 break

@@ -9,6 +9,11 @@
   not sufficient that the subdivided edges both lie incident on some
   other edge and cover it completely. You must subdivide that larger
   edge, and thus the triangle it lies on.)
+  - See line 97 of cage.py, and then 169.
+  - CageFork may need to supply some 'opening' cage that I use as
+    a basis for how I subdivide a 'closing' cage.  If I subdivide
+    the closing cage, then I must triangulate *after*, not before.
+  - I just need a point-to-line-segment check for classify_overlap
 - https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
   fix my wave example!
   - http://www.polygontriangulation.com/2018/07/triangulation-algorithm.html
