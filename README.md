@@ -5,7 +5,10 @@
   behind this.
   
 ## Annoying/boring
-- Make branching properly close the final boundaries.
+- Fix non-manifold bug at branch. (The edges must be *shared*. It is
+  not sufficient that the subdivided edges both lie incident on some
+  other edge and cover it completely. You must subdivide that larger
+  edge, and thus the triangle it lies on.)
 - https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
   fix my wave example!
   - http://www.polygontriangulation.com/2018/07/triangulation-algorithm.html

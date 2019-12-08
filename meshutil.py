@@ -241,13 +241,17 @@ def join_boundary_optim(bound1, bound2):
     i = numpy.argmin(errs)
     return join_boundary_simple(bound1, numpy.roll(bound2, i, axis=0))
 
-def close_boundary_simple(bound):
+def close_boundary_simple(bound, reverse=False):
     # This will fail for any non-convex boundary!
     centroid = numpy.mean(bound, axis=0)
     vs = numpy.concatenate([bound, centroid[numpy.newaxis,:]])
     n = bound.shape[0]
     # note that n is new the index of the centroid
     fs = numpy.zeros((n+1, 3), dtype=int)
-    for i in range(n):
-        fs[i] = [i, n, (i+1) % n]
+    if reverse:
+        for i in range(n):
+            fs[i] = [(i+1) % n, n, i]
+    else:
+        for i in range(n):
+            fs[i] = [i, n, (i+1) % n]
     return FaceVertexMesh(vs, fs)

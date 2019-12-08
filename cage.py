@@ -109,7 +109,8 @@ class CageGen(object):
                 # We stop recursing here, so close things off if needed:
                 if close_last:
                     for poly in cage_last.polys():
-                        meshes.append(meshutil.close_boundary_simple(poly))
+                        meshes.append(meshutil.close_boundary_simple(poly, reverse=True))
+                    # TODO: Fix the winding order hack here.
                 break
             # If it's a fork, then recursively generate all the geometry
             # from them, depth-first:
@@ -119,7 +120,7 @@ class CageGen(object):
                 # (e.g. loop with fork)
                 for gen in cage_cur.gens:
                     m = gen.to_mesh(count=count - i, flip_order=flip_order, loop=loop,
-                                    close_first=False, close_last=False,
+                                    close_first=False, close_last=close_last,
                                     join_fn=join_fn)
                     # TODO: How do I handle closing with CageFork?
                     meshes.append(m)
