@@ -82,7 +82,7 @@ class Cage(object):
              and case 1 does not apply.
         3 -- cage.verts[i] equals a vertex in self.verts.
         """
-        v = numpy.array((cage.shape[0],) dtype=numpy.uint8)
+        v = numpy.zeros((cage.verts.shape[0],), dtype=numpy.uint8)
         for i,vert in enumerate(cage.verts):
             # Check against every vert in self.verts:
             for j,vert2 in enumerate(self.verts):
@@ -91,13 +91,22 @@ class Cage(object):
                     break
             if v[i] > 0:
                 continue
-            # Check against every edge in self.verts:
+            # Check against every edge of our own polygons:
             for poly in self.polys():
-                # TODO:
-                # Check if 'vert' lies within some threshold of each edge
-                # in 'poly'.
-                # Note that 'poly' is cyclic - index (N-1) to 0 is an edge.
-                raise Exception("Not implemented")
+                for j,_ in enumerate(poly):
+                    j2 = (j + 1) % len(poly)
+                    # Find distance from 'vert' to each vertex of the edge:
+                    d1 = numpy.linalg.norm(poly[j,:] - vert)
+                    d2 = numpy.linalg.norm(poly[j2,:] - vert)
+                    # Find the edge's length:
+                    d = numpy.linalg.norm(poly[j2,:] - poly[j,:])
+                    # These are equal if and only if the vertex lies along
+                    # that edge:
+                    if numpy.isclose(d, d1+d2):
+                        v[i] = 1
+                        break
+                if v[i] > 0:
+                    break
             if v[i] > 0:
                 continue
             # Check against every *other* vert in cage.verts:
