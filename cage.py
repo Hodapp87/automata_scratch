@@ -67,57 +67,68 @@ class Cage(object):
     def transform(self, xform):
         """Apply a Transform to all vertices, returning a new Cage."""
         return Cage(xform.apply_to(self.verts), self.splits)
-    def classify_overlap(self, cage):
-        """Classifies each vertex in a second cage according to some rules.
-        Returns v, an array of equal length to cage.verts, for which v[i] will
-        equal 0, 1, 2, or 3 based on how cage.verts[i] was classified.
+    def classify_overlap(self, cages):
+        """Classifies each vertex in a list of cages according to some rules.
         
         (This is mostly used in order to verify that certain rules are
         followed when a mesh is undergoing forking/branching.)
         
-        The meaning of v[i] is as follows:
-        0 -- None of the below apply to cage.verts[i].
-        1 -- cage.verts[i] lies on an edge in this Cage (i.e. self).
-        2 -- cage.verts[i] equals another (different) vertex in cage.verts,
-             and case 1 does not apply.
-        3 -- cage.verts[i] equals a vertex in self.verts.
+        Returns:
+        v -- List of length len(cages).  v[i] is a numpy array of shape (N,)
+        where N is the number of vertices in cages[i] (i.e. rows of
+        cages[i].verts).  Element v[i][j] gives a classification of
+        X=l[i].verts[j] that will take values below:
+        
+        0 -- None of the below apply to X.
+        1 -- X lies on an edge in this Cage (i.e. self).
+        2 -- X equals another (different) vertex somewhere in 'cages', and
+             case 1 does not apply.
+        3 -- X equals a vertex in self.verts.
         """
-        v = numpy.zeros((cage.verts.shape[0],), dtype=numpy.uint8)
-        for i,vert in enumerate(cage.verts):
-            # Check against every vert in self.verts:
-            for j,vert2 in enumerate(self.verts):
-                if numpy.allclose(vert, vert2):
-                    v[i] = 3
-                    break
-            if v[i] > 0:
-                continue
-            # Check against every edge of our own polygons:
-            for poly in self.polys():
-                for j,_ in enumerate(poly):
-                    j2 = (j + 1) % len(poly)
-                    # Find distance from 'vert' to each vertex of the edge:
-                    d1 = numpy.linalg.norm(poly[j,:] - vert)
-                    d2 = numpy.linalg.norm(poly[j2,:] - vert)
-                    # Find the edge's length:
-                    d = numpy.linalg.norm(poly[j2,:] - poly[j,:])
-                    # These are equal if and only if the vertex lies along
-                    # that edge:
-                    if numpy.isclose(d, d1+d2):
-                        v[i] = 1
+        v = [numpy.zeros((cage.verts.shape[0],), dtype=numpy.uint8)
+             for cage in cages]
+        # for cage i of all the cages...
+        for i, cage in enumerate(cages):
+            # for vertex j within cage i...
+            for j, vert in enumerate(cage.verts):
+                # Check against every vert in our own (self.verts):
+                for vert2 in self.verts:
+                    if numpy.allclose(vert, vert2):
+                        v[i][j] = 3
                         break
-                if v[i] > 0:
-                    break
-            if v[i] > 0:
-                continue
-            # Check against every *other* vert in cage.verts:
-            for j,vert2 in enumerate(cage.verts):
-                if i == j:
+                if v[i][j] > 0:
                     continue
-                if numpy.allclose(vert, vert2):
-                    v[i] = 2
-                    break
-            if v[i] > 0:
-                continue
+                # Check against every edge of our own polygons:
+                for poly in self.polys():
+                    for k,_ in enumerate(poly):
+                        # Below is because 'poly' is cyclic (last vertex
+                        # has an edge to the first):
+                        k2 = (k + 1) % len(poly)
+                        # Find distance from 'vert' to each vertex of the edge:
+                        d1 = numpy.linalg.norm(poly[k,:] - vert)
+                        d2 = numpy.linalg.norm(poly[k2,:] - vert)
+                        # Find the edge's length:
+                        d = numpy.linalg.norm(poly[k2,:] - poly[k,:])
+                        # These are equal if and only if the vertex lies along
+                        # that edge:
+                        if numpy.isclose(d, d1 + d2):
+                            v[i][j] = 1
+                            break
+                    if v[i][j] > 0:
+                        break
+                if v[i][j] > 0:
+                    continue
+                # Check against every *other* vert in cages:
+                for i2, cage2 in enumerate(cages):
+                    for j2, vert2 in enumerate(cage.verts):
+                        if i == i2 and j == j2:
+                            # same cage, same vertex - ignore:
+                            continue
+                        if numpy.allclose(vert, vert2):
+                            v[i][j] = 2
+                            break
+                    if v[i][j] > 0:
+                        break
         return v
 
 class CageFork(object):

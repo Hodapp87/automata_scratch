@@ -13,7 +13,7 @@
   - CageFork may need to supply some 'opening' cage that I use as
     a basis for how I subdivide a 'closing' cage.  If I subdivide
     the closing cage, then I must triangulate *after*, not before.
-  - I just need a point-to-line-segment check for classify_overlap
+  - classify_overlap tells what's needed, but I need to *use* it
 - https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
   fix my wave example!
   - http://www.polygontriangulation.com/2018/07/triangulation-algorithm.html
