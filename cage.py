@@ -136,9 +136,40 @@ class CageFork(object):
     initial polygons collectively cover all of some larger polygon, with
     no overlap.  The individual generators must produce either Cage, or
     more CageFork.
+    
+    Transition vertices and edges are here to help adapt this CageFork
+    to an earlier Cage, which may require subdividing its edges.
+    
+    Vertices (in 'verts') should proceed in the same direction around the
+    cage, and start at the same vertex.  Edges (in 'edges') should have N
+    elements, one for each of N vertices in the 'starting' Cage (the one
+    that we must adapt *from*), and edges[i] should itself be a list in
+    which each element is a (row) index of 'verts'.  edges[i] specifies,
+    in correct order, which vertices in 'verts' should connect to vertex
+    i of the 'starting' Cage.  In its entirety, it also gives the
+    'transition' Cage (hence, order matters in the inner lists).
+    
+    As an example, if a starting cage is [0, 0, 0], [1, 0, 0], [1, 1, 0],
+    [0, 1, 0] and the CageFork simply subdivides into 4 equal-size cages,
+    then 'verts' might be [[0, 0, 0], [0.5, 0, 0], [1, 0, 0], [1, 0.5, 0],
+    [1, 1, 0], [0.5, 1, 0], [0, 1, 0], [0, 0.5, 0]] - note that it begins
+    at the same vertex, subdivides each edge, and (including the cyclic
+    nature) ends at the same vertex.  'edges' then would be:
+    [[7, 0, 1], [1, 2, 3], [3, 4, 5], [5, 6, 7]].  Note that every vertex
+    in the starting cage connects to 3 vertices in 'verts' and overlaps
+    with the previous and next vertex.
+    
+    (Sorry. This is explained badly and I know it.)
+    
+    Parameters:
+    gens -- explained above
+    verts -- Numpy array with 'transition' vertices, shape (M,3)
+    edges -- List of 'transition' edges
     """
-    def __init__(self, gens):
+    def __init__(self, gens, verts, edges):
         self.gens = gens
+        self.verts = verts
+        self.edges = edges
     def is_fork(self):
         return True
 
