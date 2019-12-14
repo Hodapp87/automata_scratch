@@ -9,11 +9,12 @@
   not sufficient that the subdivided edges both lie incident on some
   other edge and cover it completely. You must subdivide that larger
   edge, and thus the triangle it lies on.)
-  - See line 97 of cage.py, and then 169.
+  - See cage.py and CageGen.to_mesh
   - CageFork may need to supply some 'opening' cage that I use as
     a basis for how I subdivide a 'closing' cage.  If I subdivide
     the closing cage, then I must triangulate *after*, not before.
-  - classify_overlap tells what's needed, but I need to *use* it
+  - classify_overlap might be unnecessary, but its classification may
+    have the right idea.
 - https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
   fix my wave example!
   - http://www.polygontriangulation.com/2018/07/triangulation-algorithm.html
@@ -71,3 +72,15 @@
 ## ????
 - Embed this in Blender?
   
+## Future thoughts
+
+- What if I had a function that could generate a Cage as if
+  from a parametric formula and smoothly vary its orientation?
+  My existing tools could easily turn this to a mesh. If I could vary
+  the detail of the Cage itself (if needed), then I could also
+  generate a mesh at an arbitrary level of detail simply by sampling at
+  finer and finer points on the parameter space.  (This might also tie
+  into the Parallel Transport work.)
+- What are the limitations of using Cages?
+- Current system is very "generative".  Could I do basically L-system
+  if I have rules for how a much is *refined*?  What about IFS?

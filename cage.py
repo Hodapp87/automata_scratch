@@ -172,6 +172,24 @@ class CageFork(object):
         self.edges = edges
     def is_fork(self):
         return True
+    def transition_from(self, cage):
+        """Generate a transitional mesh to adapt the given starting Cage"""
+        vs = numpy.concatenate([cage.verts, self.verts])
+        # Indices 0...offset-1 are from cage, rest are from self.verts
+        offset = cage.verts.shape[0]
+        # We have one face for total sub-elements in self.edges:
+        count = sum([len(e) for e in self.edges])
+        fs = numpy.zeros((count, 3), dtype=int)
+        face_idx = 0
+        for j, adjs in enumerate(self.edges):
+            for k, adj in enumerate(adjs[:-1]):
+                adj_next = adjs[(k + 1) % len(adjs)]
+                # Proceed in direction of cage.verts:
+                fs[face_idx] = [j, offset + adj_next, offset + adj]
+                face_idx += 1
+            fs[face_idx] = [j, (j + 1) % len(cage.verts), offset + adjs[-1]]
+            face_idx += 1
+        return meshutil.FaceVertexMesh(vs, fs)
 
 class CageGen(object):
     """A generator, finite or infinite, that produces objects of type Cage.
@@ -209,6 +227,8 @@ class CageGen(object):
             # If it's a fork, then recursively generate all the geometry
             # from them, depth-first:
             if cage_cur.is_fork():
+                # First, transition the cage properly:
+                
                 # TODO: Clean up these recursive calls; parameters are ugly.
                 # Some of them also make no sense in certain combinations
                 # (e.g. loop with fork)
