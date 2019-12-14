@@ -163,21 +163,24 @@ def ram_horn_branch():
             elif i == 3:
                 dx, dy = 1, -1
             return meshutil.Transform().rotate([-dy,dx,0], -numpy.pi/6)
-        # this has to begin with cage_sub, prior to xf_sub(i) being
-        # composed in, because only this lines up with where the last
-        # frame finished
+        subdiv, trans_vs, trans_es = cage1.subdivide_deprecated()
         gens = [cage.CageGen(itertools.chain(
-                    [cage_sub.transform(xf0)],
-                    recur(xf_sub(i).compose(xf0), cage_sub, 8)))
+                    #[cage_sub.transform(xf0)],
+                    recur(xf_sub(i).compose(xf0), cage_sub, 4)))
                 for i,cage_sub in
-                enumerate(cage1.subdivide_deprecated())]
-        yield cage.CageFork(gens)
+                enumerate(subdiv)]
+        yield cage.CageFork(gens, xf0.apply_to(trans_vs), trans_es)
+        # TODO: Figure out why this has a large gap now
+        # I seem to be producing a transition mesh that is degenerate,
+        # which means the starting cage and subdivided cage are lying right
+        # on top of each other.  Starting cage looks okay, so subdivided
+        # cage is probably what is wrong.
     cg = cage.CageGen(itertools.chain(
         [cage0],
-        recur(meshutil.Transform(), cage0, 8),
+        recur(meshutil.Transform(), cage0, 4),
     ))
     # TODO: if this is just a list it seems silly to require itertools
-    mesh = cg.to_mesh(count=32, close_first=True, close_last=True)
+    mesh = cg.to_mesh(count=8, close_first=True, close_last=True)
     return mesh
 
 def branch_test():

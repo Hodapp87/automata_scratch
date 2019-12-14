@@ -61,7 +61,12 @@ class Cage(object):
         # I'm sure it has a pattern I can factor out, but I've not tried
         # yet.
         cages = [Cage(numpy.array(a), self.splits) for a in arrs]
-        return cages
+        trans_verts = numpy.zeros((2*len(self.verts),3), dtype=self.verts.dtype)
+        for i,(v,m) in enumerate(zip(self.verts, mids)):
+            trans_verts[2*i] = v
+            trans_verts[2*i+1] = m
+        trans_edges = [[7, 0, 1], [1, 2, 3], [3, 4, 5], [5, 6, 7]]
+        return cages, trans_verts, trans_edges
     def is_fork(self):
         return False
     def transform(self, xform):
@@ -174,6 +179,7 @@ class CageFork(object):
         return True
     def transition_from(self, cage):
         """Generate a transitional mesh to adapt the given starting Cage"""
+        print("DEBUG: Transition from {} to {}".format(cage.verts, self.verts))
         vs = numpy.concatenate([cage.verts, self.verts])
         # Indices 0...offset-1 are from cage, rest are from self.verts
         offset = cage.verts.shape[0]
@@ -228,7 +234,7 @@ class CageGen(object):
             # from them, depth-first:
             if cage_cur.is_fork():
                 # First, transition the cage properly:
-                
+                mesh_trans = cage_cur.transition_from(cage_last)
                 # TODO: Clean up these recursive calls; parameters are ugly.
                 # Some of them also make no sense in certain combinations
                 # (e.g. loop with fork)
@@ -237,10 +243,6 @@ class CageGen(object):
                                     close_first=False, close_last=close_last,
                                     join_fn=join_fn)
                     meshes.append(m)
-                    # TODO: This has bugs that produce non-manifold geometry.
-                    # Whatever the next generator *starts* with, I may need
-                    # to subdivide where I *end*: all of their edges must be
-                    # shared (not just incident).
                 # A fork can be only the final element, so disregard anything
                 # after one and just quit:
                 break
