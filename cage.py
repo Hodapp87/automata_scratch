@@ -179,7 +179,7 @@ class CageFork(object):
         return True
     def transition_from(self, cage):
         """Generate a transitional mesh to adapt the given starting Cage"""
-        print("DEBUG: Transition from {} to {}".format(cage.verts, self.verts))
+        #print("DEBUG: Transition from {} to {}".format(cage.verts, self.verts))
         vs = numpy.concatenate([cage.verts, self.verts])
         # Indices 0...offset-1 are from cage, rest are from self.verts
         offset = cage.verts.shape[0]
@@ -205,9 +205,9 @@ class CageGen(object):
         self.gen = gen
     def to_mesh(self, count=None, flip_order=False, loop=False, close_first=False,
                 close_last=False, join_fn=meshutil.join_boundary_simple):
-        #print("to_mesh(count={})".format(count))
         # Get 'opening' polygons of generator:
         cage_first = next(self.gen)
+        #print("DEBUG: to_mesh(count={}), cage_first={}".format(count, cage_first.verts))
         # TODO: Avoid 'next' here so that we can use a list, not solely a
         # generator/iterator.
         if cage_first.is_fork():
@@ -222,6 +222,7 @@ class CageGen(object):
         # Generate all polygons from there and connect them:
         #print(self.gen)
         for i, cage_cur in enumerate(self.gen):
+            #print("DEBUG: i={}, cage_cur={}, cage_last={}".format(i, cage_cur, cage_last.verts))
             #print("{}: {}".format(i, cage_cur))
             if count is not None and i >= count:
                 # We stop recursing here, so close things off if needed:
@@ -235,6 +236,7 @@ class CageGen(object):
             if cage_cur.is_fork():
                 # First, transition the cage properly:
                 mesh_trans = cage_cur.transition_from(cage_last)
+                meshes.append(mesh_trans)
                 # TODO: Clean up these recursive calls; parameters are ugly.
                 # Some of them also make no sense in certain combinations
                 # (e.g. loop with fork)
@@ -262,8 +264,5 @@ class CageGen(object):
                 else:
                     m = join_fn(b0, b1)
                 meshes.append(m)
-        # TODO: close_last?
-        # or should this just look for whether or not the
-        # generator ends here (without a CageFork)?
         mesh = meshutil.FaceVertexMesh.concat_many(meshes)
         return mesh

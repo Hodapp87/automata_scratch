@@ -147,7 +147,9 @@ def ram_horn_branch():
     def recur(xf, cage1, count):
         for i in range(count):
             if i > 0:
-                yield cage1.transform(xf)
+                c = cage1.transform(xf)
+                #print("DEBUG: recur, i={}, yield {}".format(i, c.verts))
+                yield c
             xf0 = xf
             xf = incr.compose(xf)
         # .compose(opening_boundary(i))
@@ -162,25 +164,26 @@ def ram_horn_branch():
                 dx, dy = -1, -1
             elif i == 3:
                 dx, dy = 1, -1
-            return meshutil.Transform().rotate([-dy,dx,0], -numpy.pi/6)
+            return meshutil.Transform().translate(0, 0, 0.5).rotate([-dy,dx,0], -numpy.pi/6)
         subdiv, trans_vs, trans_es = cage1.subdivide_deprecated()
         gens = [cage.CageGen(itertools.chain(
-                    #[cage_sub.transform(xf0)],
-                    recur(xf_sub(i).compose(xf0), cage_sub, 4)))
+                    [cage_sub.transform(xf)],
+                    recur(xf_sub(i).compose(xf), cage_sub, 8)))
                 for i,cage_sub in
                 enumerate(subdiv)]
-        yield cage.CageFork(gens, xf0.apply_to(trans_vs), trans_es)
-        # TODO: Figure out why this has a large gap now
-        # I seem to be producing a transition mesh that is degenerate,
-        # which means the starting cage and subdivided cage are lying right
-        # on top of each other.  Starting cage looks okay, so subdivided
-        # cage is probably what is wrong.
+        yield cage.CageFork(gens, xf.apply_to(trans_vs), trans_es)
+        # TODO: The starting cage needs to be one iteration *earlier*, and the
+        # subdivided cage is fine, but the generators likewise need to start
+        # one iteration earlier.  Look closely in Blender at the mesh,
+        # specifically just prior to the fork.
+        #
+        # xf0.apply_to(trans_vs) is identical to last cage yielded?
     cg = cage.CageGen(itertools.chain(
         [cage0],
-        recur(meshutil.Transform(), cage0, 4),
+        recur(meshutil.Transform(), cage0, 8),
     ))
     # TODO: if this is just a list it seems silly to require itertools
-    mesh = cg.to_mesh(count=8, close_first=True, close_last=True)
+    mesh = cg.to_mesh(count=32, close_first=True, close_last=True)
     return mesh
 
 def branch_test():
@@ -350,7 +353,8 @@ def main():
     fns = {
         ram_horn: "ramhorn.stl",
         ram_horn2: "ramhorn2.stl",
-        ram_horn3: "ramhorn3.stl",
+        # TODO: Fix
+        #ram_horn3: "ramhorn3.stl",
         ram_horn_branch: "ramhorn_branch.stl",
         twist: "twist.stl",
         twist_nonlinear: "twist_nonlinear.stl",

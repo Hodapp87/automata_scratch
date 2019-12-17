@@ -5,16 +5,6 @@
   behind this.
   
 ## Annoying/boring
-- Fix non-manifold bug at branch. (The edges must be *shared*. It is
-  not sufficient that the subdivided edges both lie incident on some
-  other edge and cover it completely. You must subdivide that larger
-  edge, and thus the triangle it lies on.)
-  - See cage.py and CageGen.to_mesh
-  - CageFork may need to supply some 'opening' cage that I use as
-    a basis for how I subdivide a 'closing' cage.  If I subdivide
-    the closing cage, then I must triangulate *after*, not before.
-  - classify_overlap might be unnecessary, but its classification may
-    have the right idea.
 - https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
   fix my wave example!
   - http://www.polygontriangulation.com/2018/07/triangulation-algorithm.html
@@ -84,3 +74,4 @@
 - What are the limitations of using Cages?
 - Current system is very "generative".  Could I do basically L-system
   if I have rules for how a much is *refined*?  What about IFS?
+- Do this in Rust once I understand WTF I am doing
