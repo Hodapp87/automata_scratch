@@ -148,22 +148,13 @@ def ram_horn_branch():
         for i in range(count):
             if i > 0:
                 c = cage1.transform(xf)
-                #print("DEBUG: recur, i={}, yield {}".format(i, c.verts))
                 yield c
             xf0 = xf
             xf = incr.compose(xf)
-        # .compose(opening_boundary(i))
         def xf_sub(i):
-            # yes, I can do this in a one-liner
-            # yes, it should be normalized, but I reused from something else
-            if i == 0:
-                dx, dy = 1, 1
-            elif i == 1:
-                dx, dy = -1, 1
-            elif i == 2:
-                dx, dy = -1, -1
-            elif i == 3:
-                dx, dy = 1, -1
+            # (dx,dy) should be normalized, but I reused from something else
+            dx = 1 if i == 0 or i == 1 else -1
+            dy = 1 if i == 0 or i == 3 else -1
             return meshutil.Transform().translate(0, 0, 0.5).rotate([-dy,dx,0], -numpy.pi/6)
         subdiv, trans_vs, trans_es = cage1.subdivide_deprecated()
         gens = [cage.CageGen(itertools.chain(
@@ -172,12 +163,6 @@ def ram_horn_branch():
                 for i,cage_sub in
                 enumerate(subdiv)]
         yield cage.CageFork(gens, xf.apply_to(trans_vs), trans_es)
-        # TODO: The starting cage needs to be one iteration *earlier*, and the
-        # subdivided cage is fine, but the generators likewise need to start
-        # one iteration earlier.  Look closely in Blender at the mesh,
-        # specifically just prior to the fork.
-        #
-        # xf0.apply_to(trans_vs) is identical to last cage yielded?
     cg = cage.CageGen(itertools.chain(
         [cage0],
         recur(meshutil.Transform(), cage0, 8),
