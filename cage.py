@@ -67,6 +67,20 @@ class Cage(object):
             trans_verts[2*i+1] = m
         trans_edges = [[7, 0, 1], [1, 2, 3], [3, 4, 5], [5, 6, 7]]
         return cages, trans_verts, trans_edges
+    def subdivide_x_deprecated(self):
+        mids = (self.verts + numpy.roll(self.verts, -1, axis=0)) / 2
+        centroid = numpy.mean(self.verts, axis=0)
+        arrs = [
+                [self.verts[0,:], mids[0,:],       mids[2,:],       self.verts[3,:]],
+                [mids[0,:],       self.verts[1,:], self.verts[2,:], mids[2,:]],
+        ]
+        cages = [Cage(numpy.array(a), self.splits) for a in arrs]
+        trans_verts = numpy.zeros((2*len(self.verts),3), dtype=self.verts.dtype)
+        for i,(v,m) in enumerate(zip(self.verts, mids)):
+            trans_verts[2*i] = v
+            trans_verts[2*i+1] = m
+        trans_edges = [[7, 0, 1], [1, 2, 3], [3, 4, 5], [5, 6, 7]]
+        return cages, trans_verts, trans_edges
     def is_fork(self):
         return False
     def transform(self, xform):

@@ -8,6 +8,8 @@
 - https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
   fix my wave example!
   - http://www.polygontriangulation.com/2018/07/triangulation-algorithm.html
+- Clean up examples.ram_horn_branch(). The way I clean it up might
+  help inform some cleaner designs.
 - I really need to standardize some of the behavior of fundamental
   operations (with regard to things like sizes they generate). This
   is behavior that, if it changes, will change a lot of things that I'm
@@ -58,6 +60,7 @@
   identical except that it is higher-resolution?
 - Use mixins to extend 3D transformations to things (matrices,
   cages, meshes, existing transformations)
+- I can transform a Cage.  Why not a CageGen?
   
 ## ????
 - Embed this in Blender?
@@ -75,3 +78,7 @@
 - Current system is very "generative".  Could I do basically L-system
   if I have rules for how a much is *refined*?  What about IFS?
 - Do this in Rust once I understand WTF I am doing
+
+## Other thoughts
+
+- Why do I never use the term "extruding" to describe what I'm doing?

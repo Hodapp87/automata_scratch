@@ -2,6 +2,7 @@
 
 import itertools
 
+import math
 import numpy
 import stl.mesh
 import trimesh
@@ -148,22 +149,13 @@ def ram_horn_branch():
         for i in range(count):
             if i > 0:
                 c = cage1.transform(xf)
-                #print("DEBUG: recur, i={}, yield {}".format(i, c.verts))
                 yield c
             xf0 = xf
             xf = incr.compose(xf)
-        # .compose(opening_boundary(i))
         def xf_sub(i):
-            # yes, I can do this in a one-liner
-            # yes, it should be normalized, but I reused from something else
-            if i == 0:
-                dx, dy = 1, 1
-            elif i == 1:
-                dx, dy = -1, 1
-            elif i == 2:
-                dx, dy = -1, -1
-            elif i == 3:
-                dx, dy = 1, -1
+            # (dx,dy) should be normalized, but I reused from something else
+            dx = 1 if i == 0 or i == 1 else -1
+            dy = 1 if i == 0 or i == 3 else -1
             return meshutil.Transform().translate(0, 0, 0.5).rotate([-dy,dx,0], -numpy.pi/6)
         subdiv, trans_vs, trans_es = cage1.subdivide_deprecated()
         gens = [cage.CageGen(itertools.chain(
@@ -172,12 +164,6 @@ def ram_horn_branch():
                 for i,cage_sub in
                 enumerate(subdiv)]
         yield cage.CageFork(gens, xf.apply_to(trans_vs), trans_es)
-        # TODO: The starting cage needs to be one iteration *earlier*, and the
-        # subdivided cage is fine, but the generators likewise need to start
-        # one iteration earlier.  Look closely in Blender at the mesh,
-        # specifically just prior to the fork.
-        #
-        # xf0.apply_to(trans_vs) is identical to last cage yielded?
     cg = cage.CageGen(itertools.chain(
         [cage0],
         recur(meshutil.Transform(), cage0, 8),
@@ -185,6 +171,43 @@ def ram_horn_branch():
     # TODO: if this is just a list it seems silly to require itertools
     mesh = cg.to_mesh(count=32, close_first=True, close_last=True)
     return mesh
+
+def dream_pendant():
+    center = meshutil.Transform().translate(-0.5, -0.5, 0)
+    cage0 = cage.Cage.from_arrays([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 1, 0],
+    ]).transform(center)
+    incr = meshutil.Transform() \
+                   .scale(0.95, 1.0, 0.95) \
+                   .rotate([0,1,0], 0.2) \
+                   .translate(0,0,0.9)
+    def recur(xf, cage1, count):
+        for i in range(count):
+            if i > 0:
+                c = cage1.transform(xf)
+                yield c
+            xf0 = xf
+            xf = incr.compose(xf)
+        def xf_rot(a):
+            return meshutil.Transform().rotate([0,1,0], a)
+        subdiv, trans_vs, trans_es = cage1.subdivide_x_deprecated()
+        gens = [cage.CageGen(itertools.chain(
+                    [cage_sub.transform(xf)],
+                    recur(xf_rot(ang).compose(xf), cage_sub, 5)))
+                for cage_sub,ang in
+                zip(subdiv, [-0.2, 0.7])]
+        yield cage.CageFork(gens, xf.apply_to(trans_vs), trans_es)
+    cg = cage.CageGen(itertools.chain(
+        [cage0],
+        recur(meshutil.Transform(), cage0, 3),
+    ))
+    # TODO: if this is just a list it seems silly to require itertools
+    mesh1 = cg.to_mesh(count=32, close_first=False, close_last=True)
+    mesh2 = mesh1.transform(meshutil.Transform().rotate([0,1,0], math.pi))
+    return meshutil.FaceVertexMesh.concat_many([mesh1, mesh2])
 
 def branch_test():
     b0 = numpy.array([
@@ -356,6 +379,7 @@ def main():
         # TODO: Fix
         #ram_horn3: "ramhorn3.stl",
         ram_horn_branch: "ramhorn_branch.stl",
+        dream_pendant: "dream_pendant.stl",
         twist: "twist.stl",
         twist_nonlinear: "twist_nonlinear.stl",
         twist_from_gen: "twist_from_gen.stl",
