@@ -1,15 +1,5 @@
 # Hasty conversion from the Rust in prosha/src/examples.rs & Barbs
 
-# The 'main' vertices are fine (easily verified by making barbs()
-# always exit early on the limit check) .  Something is wrong with the
-# barbs.  base_incr and barb_incr seem fine on their own.  but even
-# the first iteration of barb() seems to produce garbage geometry.
-
-# Fairly sure self.sides is wrong.  I've checked it against the Rust
-# repeatedly and my best guess is that the rotation matrices are being
-# constructed differently; I don't know what the Rust code uses (it's
-# an external library) whereas mine does it from quaternions.
-
 import numpy as np
 
 import xform
@@ -20,7 +10,8 @@ Y = np.array([0.0, 1.0, 0.0])
 Z = np.array([0.0, 0.0, 1.0])
 
 class Barbs(object):
-    def __init__(self):
+    def __init__(self, scale_min=0.02):
+        self.scale_min = scale_min
         # Incremental transform from each stage to the next:
         self.base_incr = (xform.Transform().
                           translate(0, 0, 1).
@@ -58,6 +49,8 @@ class Barbs(object):
         # array, but Blender eventually needs tuples.)
 
     def run(self, iters) -> (list, list):
+        # 'iters' is ignored for now
+        # 
         # Make seed vertices, use them for 'bottom' face, and recurse:
         self.verts.extend(self.base)
         self.faces.append((0, 1, 2, 3))
@@ -69,7 +62,7 @@ class Barbs(object):
     def limit_check(self, xform: xform.Transform, iters) -> bool:
         # Assume all scales are the same (for now)
         sx,_,_ = xform.get_scale()
-        return sx < 0.005 # or iters <= 0
+        return sx < self.scale_min
 
     def main(self, iters, xform, bound):
 
@@ -96,9 +89,7 @@ class Barbs(object):
                   [bound[3], bound[0], a0 + 0, a0 + 3])
 
     def barb(self, iters, xform, bound):
-        # DEBUG: This is set True while testing until I figure out
-        # other problems
-        if True or self.limit_check(xform, iters):
+        if self.limit_check(xform, iters):
             # Note opposite winding order
             verts = [bound[i] for i in [3,2,1,0]]
             self.faces.append(verts)
@@ -118,5 +109,4 @@ class Barbs(object):
             a1 = offset + j
             self.faces.append([a0, a1, b1, b0])
 
-        it2 = 1 # replace with iters-1 once fixed...
-        self.barb(it2, xform2, [offset, offset + 1, offset + 2, offset + 3])
+        self.barb(iters-1, xform2, [offset, offset + 1, offset + 2, offset + 3])

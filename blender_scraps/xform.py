@@ -28,8 +28,7 @@ class Transform(object):
         else:
             self.mtx = mtx
     def _compose(self, mtx2):
-        # Note pre-multiply. Earlier transforms are done first.
-        return Transform(mtx2 @ self.mtx)
+        return Transform(self.mtx @ mtx2)
     def compose(self, xform):
         return self._compose(xform.mtx)
     def scale(self, *a, **kw):
