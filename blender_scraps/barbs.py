@@ -47,6 +47,8 @@ class Barbs(object):
         # be converted last-minute to tuples. (Why: we need to refer
         # to prior vertices and arithmetic is much easier from an
         # array, but Blender eventually needs tuples.)
+        self.creases_side = set()
+        self.creases_joint = set()
 
     def run(self, iters) -> (list, list):
         # 'iters' is ignored for now
@@ -87,6 +89,10 @@ class Barbs(object):
                   [bound[2], bound[3], a0 + 3, a0 + 2])
         self.barb(iters - 1, xform.compose(self.sides[3]),
                   [bound[3], bound[0], a0 + 0, a0 + 3])
+        for i in range(4):
+            j = (i + 1) % 4
+            self.creases_joint.add((a0 + i, a0 + j))
+            self.creases_side.add((bound[i], a0 + i))
 
     def barb(self, iters, xform, bound):
         if self.limit_check(xform, iters):
