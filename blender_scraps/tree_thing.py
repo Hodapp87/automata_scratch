@@ -1,7 +1,8 @@
 # Hasty conversion from the Rust in prosha/src/examples.rs & Barbs
 
 # This is mostly right, except:
-# - Something near the transition is wrong.
+# - Something near the transition is wrong.  Some verts are in
+# duplicate positions.  The Rust code may have this same issue.
 # - It doesn't yet do creases.
 
 import numpy as np
@@ -32,8 +33,8 @@ class TreeThing(object):
         self.trans = np.array([
             # Top edge midpoints:
             [-0.5,  0.0, 0.0],  # 0 - connects b0-b1
-            [ 0.5,  0.0, 0.0],  # 2 - connects b2-b3
-            [ 0.0,  0.5, 0.0],  # 1 - connects b1-b2
+            [ 0.0,  0.5, 0.0],  # 2 - connects b2-b3
+            [ 0.5,  0.0, 0.0],  # 1 - connects b1-b2
             [ 0.0, -0.5, 0.0],  # 3 - connects b3-b0
             # Top middle:
             [ 0.0,  0.0, 0.0],  # 4 - midpoint/centroid of all
