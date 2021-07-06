@@ -1,8 +1,6 @@
 # Hasty conversion from the Rust in prosha/src/examples.rs & Barbs
 
 # This is mostly right, except:
-# - Something near the transition is wrong.  Some verts are in
-# duplicate positions.  The Rust code may have this same issue.
 # - It doesn't yet do creases.
 
 import numpy as np
@@ -117,9 +115,9 @@ class TreeThing(object):
             self.faces.append(verts)
             return
 
+        xf2 = xf.compose(self.incr)
         if depth > 0:
             # Just recurse on the current path:
-            xf2 = xf.compose(self.incr)
             n0 = len(self.verts)
             self.verts.extend(xf2.apply_to(self.base))
 
@@ -135,9 +133,9 @@ class TreeThing(object):
             self.child(xf2, depth - 1, [n0, n0 + 1, n0 + 2, n0 + 3]);
         else:
             n = len(self.verts)
-            self.verts.extend(xf.apply_to(self.base))
+            self.verts.extend(xf2.apply_to(self.base))
             m01 = len(self.verts)
-            self.verts.extend(xf.apply_to(self.trans))
+            self.verts.extend(xf2.apply_to(self.trans))
             m12, m23, m30, c = m01 + 1, m01 + 2, m01 + 3, m01 + 4
             self.faces.extend([
                 # two faces straddling edge from vertex 0:
@@ -159,7 +157,7 @@ class TreeThing(object):
                 (b[3], m30, b[0]),
             ])
 
-            self.child(xf.compose(self.splits[0]), self.depth, [c, m12, n+2, m23]);
-            self.child(xf.compose(self.splits[1]), self.depth, [c, m01, n+1, m12]);
-            self.child(xf.compose(self.splits[2]), self.depth, [c, m30, n+0, m01]);
-            self.child(xf.compose(self.splits[3]), self.depth, [c, m23, n+3, m30]);
+            self.child(xf2.compose(self.splits[0]), self.depth, [c, m12, n+2, m23]);
+            self.child(xf2.compose(self.splits[1]), self.depth, [c, m01, n+1, m12]);
+            self.child(xf2.compose(self.splits[2]), self.depth, [c, m30, n+0, m01]);
+            self.child(xf2.compose(self.splits[3]), self.depth, [c, m23, n+3, m30]);
