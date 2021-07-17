@@ -1,30 +1,59 @@
 #!/usr/bin/env python3
 
+# Chris Hodapp, 2021-07-17
+#
+# This code is: yet another attempt at producing better meshes from
+# implicit surfaces / isosurfaces.  My paper notes from around the
+# same time period describe some more of why and how.
+#
+# This depends on the Python bindings for libfive (circa revision
+# 601730dc), on numpy, and on autograd from
+# https://github.com/HIPS/autograd for automatic differentiation.
+#
+# For an implicit surface expressed in a Python function, it:
+# - uses libfive to generate a mesh for this implicit surface,
+# - dumps this face-vertex data (numpy arrays) to disk in a form Blender
+#   can load pretty easily, (this is done only because exporting and
+#   loading an STL resulted in vertex and face indices being out of sync
+#   for some reason, perhaps libfive's meshing having randomness.)
+# - iterates over each edge from libfive's mesh data,
+# - for that edge, computes the curvature of the surface perpendicular
+#   to that edge,
+# - saves this curvature away in another file Blender can load.
+#
+# There are then some Blender routines for its Python API which load
+# the mesh, load the curvatures, and then try to turn these per-edge
+# curvature values to edge crease weights.  The hope was that this
+# would allow subdivision to work effectively on the resultant mesh in
+# sharper (higher-curvature) areas - lower crease weights should fit
+# lower-curvature areas better, and higher crease weights should keep
+# a sharper edge from being dulled too much by subdivision.
+# 
+# I tried with spiral_implicit, my same spiral isosurface function
+# from 2005 June yet again, as the implicit surface, but also yet
+# again, it proved a very difficult surface to work with.
 
-
+# Below is some elisp so that I can use the right environment in Emacs
+# and elpy:
+# 
 # (setq python-shell-interpreter "nix-shell" python-shell-interpreter-args " -I nixpkgs=/home/hodapp/nixpkgs -p python3Packages.libfive python3Packages.autograd python3Packages.numpy --command \"python3 -i\"")
 
-import os, sys
-os.environ["LIBFIVE_FRAMEWORK_DIR"]="/nix/store/gcxmz71b4i6bmsb1alafr4cqdnl19dn5-libfive-unstable-e93fef9d/lib/"
-sys.path.insert(0, "/nix/store/gcxmz71b4i6bmsb1alafr4cqdnl19dn5-libfive-unstable-e93fef9d/lib/python3.8/site-packages/")
+# This is a kludge to ensure libfive's bindings can be found:
+#import os, sys
+#os.environ["LIBFIVE_FRAMEWORK_DIR"]="/nix/store/gcxmz71b4i6bmsb1alafr4cqdnl19dn5-libfive-unstable-e93fef9d/lib/"
+#sys.path.insert(0, "/nix/store/gcxmz71b4i6bmsb1alafr4cqdnl19dn5-libfive-unstable-e93fef9d/lib/python3.8/site-packages/")
 
-#import numpy as np
 import autograd.numpy as np
 from autograd import grad, elementwise_grad as egrad
 
-# Until I build this in properly:
-#import sys
-#sys.path.insert(0, "/home/hodapp/source/libfive/libfive/bind/python")
-
 from libfive.shape import shape
 
-def sphere(r):
-    @shape
-    def f(x, y, z):
-        return (x*x + y*y + z*z) - r*r
-    return f
-
-def spiral_vec(outer, inner, freq, phase, thresh):
+# The implicit surface is below.  It returns two functions that
+# compute the same thing: a vectorized version (f) that can handle
+# array inputs with (x,y,z) rows, and a version (g) that can also
+# handle individual x,y,z. f is needed for autograd, g is needed for
+# libfive.
+def spiral_implicit(outer, inner, freq, phase, thresh):
     def g(x,y,z):
         d1 = outer*y - inner*np.sin(freq*x + phase)
         d2 = outer*z - inner*np.cos(freq*x + phase)
@@ -47,29 +76,6 @@ def any_perpendicular(vecs):
                  np.stack((y,  -x, a0), axis=-1),
                  np.stack((a0, -z, y),  axis=-1))
     return p
-
-f_arr, f = spiral_vec(2.0, 0.4, 20.0, 0.0, 0.3)
-fs = shape(f)
-print(fs)
-
-#s = sphere(1.5)
-#print(s)
-
-kw={
-    "xyz_min": (-0.5, -0.5, -0.5),
-    "xyz_max": (0.5, 0.5, 0.5),
-    "resolution": 400, # 20,
-}
-#fs.save_stl("spiral.stl", **kw)
-
-print(f"letting libfive generate mesh...")
-verts, tris = fs.get_mesh(**kw)
-verts = np.array(verts, dtype=np.float32)
-tris = np.array(tris, dtype=np.uint32)
-
-print(f"Saving {len(verts)} vertices, {len(tris)} faces")
-np.save("spiral_verts.npy", verts)
-np.save("spiral_tris.npy", tris)
 
 def intersect_implicit(surface_fn):
     # surface_fn(x,y,z)=0 is an implicit surface.  This returns a
@@ -106,6 +112,27 @@ def implicit_curvature_2d(curve_fn):
         dtt = g2t[..., 1]
         return (-dt*dt*dss + 2*ds*dt*dst - ds*ds*dtt) / ((ds*ds + dt*dt)**(3/2))
     return f
+
+f_arr, f = spiral_implicit(2.0, 0.4, 20.0, 0.0, 0.3)
+fs = shape(f)
+print(fs)
+
+kw={
+    "xyz_min": (-0.5, -0.5, -0.5),
+    "xyz_max": (0.5, 0.5, 0.5),
+    "resolution": 20,
+}
+# To save directly as STL:
+# fs.save_stl("spiral.stl", **kw)
+
+print(f"letting libfive generate mesh...")
+verts, tris = fs.get_mesh(**kw)
+verts = np.array(verts, dtype=np.float32)
+tris = np.array(tris, dtype=np.uint32)
+
+print(f"Saving {len(verts)} vertices, {len(tris)} faces")
+np.save("spiral_verts.npy", verts)
+np.save("spiral_tris.npy", tris)
 
 print(f"Computing curvatures...")
 
