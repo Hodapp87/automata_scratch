@@ -1,0 +1,79 @@
+
+* Brief history?
+  - I've done different forms of procedural graphics for awhile...
+  - POV-Ray is where I learned about implicit surfaces and some other
+    kinds of parametric geometry.
+  - At some point I discovered Context Free and Structure Synth.
+    (and synthopia blog and sphere tracing).
+  - I sort of pursued these as separate paths: implicit surfaces
+    (great for rendering methods like sphere tracing), and parametric
+    geometry (much easier to implement).
+  - It wasn't until about 2018 that I sketched out some ideas for
+    parametric 3D geometry - based loosely around Structure Synth -
+    and implemented some things.
+  - First this was some exploration of Parallel Frame Transport that
+    I'd read about via thi.ng, and then python_extrude_meshgen.
+  - Things I learned there become Prosha.
+  - Things I learned *there* are at my current unnamed work.
+
+* Brief history, written out more
+
+  (TODO: a note to me, reading later: you don't need to give your
+  entire life story here.)
+
+  Context Free is one of my favorite projects since I discovered it
+  about 2010.  It's one I've written about before (TODO: link to my
+  posts), played around in (TODO: link to images), presented on, as
+  well as re-implemented myself in different ways (TODO: link to
+  contextual).  That is sometimes because I wanted to do something
+  different, such as make it realtime and interactive, and sometimes
+  because implementing its system of recursive grammars and
+  replacement rules can be an excellent way to learn things in a new
+  language.
+
+  I've also played around in 3D graphics, particularly raytracing,
+  since about 1999 in PolyRay and POV-Ray.  POV-Ray is probably what
+  led me to learn about things like implicit surfaces, parametric
+  surfaces, and procedural geometry - its scene language is full of
+  constructs for that.  Naturally, this led me to wonder how I might
+  extend Context Free's model to work more generally with 3D geometry.
+
+  [[http://structuresynth.sourceforge.net/index.php][Structure Synth]] of course already exists (thank you to Mikael
+  Hvidtfeldt Christensen's blog [[http://blog.hvidtfeldts.net/][Syntopia]], another of my favorite
+  things ever), and so does [[https://kronpano.github.io/BrowserSynth/][BrowserSynth]], and they're excellent tools
+  that are straightforward generalizations of Context Free to 3D.
+  However, at some point I realized they weren't exactly what I
+  wanted.  These tools let you combine together 3D primitives to build
+  up a more complex scene - but they don't properly handle any sort of
+  *joining* of these primitives in a way that respects many of the
+  'rules' of geometry that are necessary for a lot of tools, like
+  having a well-defined inside/outside, not being self-intersecting,
+  being manifold, and so forth.
+
+  Tools like [[https://openscad.org/][OpenSCAD]], based on [[https://www.cgal.org/][CGAL]], handle the details of this, and
+  I suspect that [[https://www.opencascade.com/][Open CASCADE]] (thus [[https://www.freecadweb.org/][FreeCAD]]) also does.  In CAD work,
+  it's crucial.  I experimented with similar recursive systems with
+  some of these, but I quickly ran into a problem: they were made for
+  actual practical applications in CAD, not for my nonsensical
+  generative art, and they scaled quite poorly with the sort of
+  recursion I was asking for.
+
+  Implicit surfaces (or one of the many
+  equivalent-except-for-when-it's-not names for this, e.g. F-Reps or
+  distance bounds or SDFs or isosurfaces) handle almost all of this
+  well! They express CSG (TODO: link to CSG) operations, blending
+  shapes is easy, and they can be rendered directly on the GPU... see
+  Syntopia (again), or nearly anything by Inigo Quilez (TODO: link to
+  this), or look up raymarching, or look up sphere tracing, or see
+  nTopology (TODO: link), or libfive and Keeter's research paper
+  (TODO: link).  It's pure magic and it's elegant.
+
+  This is except for one big problem: converting them to good meshes
+  is a pain.  None of my attempts have ever quite worked.
+
+  -----
+
+  So, with these limitations in mind, around 2018 June I had started
+  jotting some ideas down.  The gist is that I wanted to create
+  "correct-by-construction" meshes from these recursive grammars.
+  

@@ -24,10 +24,21 @@ high-level goal, but almost completely unrelated in their descent.
   and found a section I'd ignored on the difficulties of producing
   good meshes from isosurfaces for the sake of rendering.  I kept
   the code around because I figured it would be useful to refer to
-  later, particularly for the integration with Blender.
+  later, particularly for the integration with Blender - but
+  otherwise shelved this effort.
 - `blender_scraps` contains some scraps of Python code meant to be
   used inside of Blender's Python scripting - and it contains some
   conversions from another project, Prosha, for procedural mesh
   generation in Rust (itself based on learnings from
   `python_extrude_meshgen`).  These examples were proof-of-concept of
   generating meshes as control cages rather than as "final" meshes.
+
+It would probably make sense to rename this repo to something with
+`procedural` in the name rather than `automata` since at some point it
+ceased to have much to do with automata.
+
+## Projects not covered here
+
+- curl-noise work (both in Clojure and in Python/vispy)
+- parallel transport
+- prosha, of course
