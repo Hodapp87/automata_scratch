@@ -21,12 +21,14 @@
   (TODO: a note to me, reading later: you don't need to give your
   entire life story here.)
 
+  (TODO: pictures will make this post make a *lot* more sense)
+
   Context Free is one of my favorite projects since I discovered it
   about 2010.  It's one I've written about before (TODO: link to my
   posts), played around in (TODO: link to images), presented on, as
-  well as re-implemented myself in different ways (TODO: link to
-  contextual).  That is sometimes because I wanted to do something
-  different, such as make it realtime and interactive, and sometimes
+  well as re-implemented myself in different ways (see: [[https://github.com/hodapp87/contextual][Contextual]]).
+  That is sometimes because I wanted to do something Context Free
+  couldn't, such as make it realtime and interactive, and sometimes
   because implementing its system of recursive grammars and
   replacement rules can be an excellent way to learn things in a new
   language.
@@ -36,19 +38,20 @@
   led me to learn about things like implicit surfaces, parametric
   surfaces, and procedural geometry - its scene language is full of
   constructs for that.  Naturally, this led me to wonder how I might
-  extend Context Free's model to work more generally with 3D geometry.
+  extend Context Free's model to work more generally with 3D geometry,
+  and let me use it to produce procedural geometry.
 
-  [[http://structuresynth.sourceforge.net/index.php][Structure Synth]] of course already exists (thank you to Mikael
+  [[http://structuresynth.sourceforge.net/index.php][Structure Synth]] of course already exists as a straightforward
+  generalization of Context Free's model to 3D (thank you to Mikael
   Hvidtfeldt Christensen's blog [[http://blog.hvidtfeldts.net/][Syntopia]], another of my favorite
-  things ever), and so does [[https://kronpano.github.io/BrowserSynth/][BrowserSynth]], and they're excellent tools
-  that are straightforward generalizations of Context Free to 3D.
-  However, at some point I realized they weren't exactly what I
-  wanted.  These tools let you combine together 3D primitives to build
-  up a more complex scene - but they don't properly handle any sort of
-  *joining* of these primitives in a way that respects many of the
-  'rules' of geometry that are necessary for a lot of tools, like
-  having a well-defined inside/outside, not being self-intersecting,
-  being manifold, and so forth.
+  things ever, for introducing me to it awhile ago).  See also
+  [[https://kronpano.github.io/BrowserSynth/][BrowserSynth]].  However, at some point I realized they weren't
+  exactly what I wanted.  Structure Synth lets you combine together 3D
+  primitives to build up a more complex scene - but doesn't try to
+  properly handle any sort of *joining* of these primitives in a way
+  that respects many of the 'rules' of geometry that are necessary for
+  a lot of tools, like having a well-defined inside/outside, not being
+  self-intersecting, being manifold, and so forth.
 
   Tools like [[https://openscad.org/][OpenSCAD]], based on [[https://www.cgal.org/][CGAL]], handle the details of this, and
   I suspect that [[https://www.opencascade.com/][Open CASCADE]] (thus [[https://www.freecadweb.org/][FreeCAD]]) also does.  In CAD work,
@@ -63,17 +66,34 @@
   distance bounds or SDFs or isosurfaces) handle almost all of this
   well! They express CSG (TODO: link to CSG) operations, blending
   shapes is easy, and they can be rendered directly on the GPU... see
-  Syntopia (again), or nearly anything by Inigo Quilez (TODO: link to
-  this), or look up raymarching, or look up sphere tracing, or see
-  nTopology (TODO: link), or libfive and Keeter's research paper
-  (TODO: link).  It's pure magic and it's elegant.
+  [[http://blog.hvidtfeldts.net/][Syntopia]] again, or nearly anything by [[https://iquilezles.org/][Inigo Quilez]], or look up
+  raymarching and sphere tracing, or see [[https://ntopology.com/][nTopology]], or Matt Keeter's
+  work with [[https://www.libfive.com/][libfive]] and [[https://www.mattkeeter.com/research/mpr/][MPR]].  It's pure magic and it's wonderfully
+  elegant and I'll probably have many other posts on this.
 
-  This is except for one big problem: converting them to good meshes
-  is a pain.  None of my attempts have ever quite worked.
+  However, implicit surfaces still have one pretty big problem:
+  converting them to good meshes for rendering /is a huge pain/.  I
+  have other posts on this as well, but for now, take it on faith.
+  (TODO: Make those posts.)
 
-  -----
-
-  So, with these limitations in mind, around 2018 June I had started
+  With these limitations in mind, around 2018 June I had started
   jotting some ideas down.  The gist is that I wanted to create
-  "correct-by-construction" meshes from these recursive grammars.
-  
+  "correct-by-construction" meshes from these recursive grammars.  By
+  that, I meant: incrementally producing the desired geometry as a
+  mesh, triangle-by-triangle, in such a way that guaranteed that the
+  resultant mesh had the desired detail level, was a manifold surface,
+  and that it was otherwise a well-behaved mesh (e.g. no degenerate
+  triangles, no self-intersection, no high-degree vertices) - rather
+  than attempting to patch up the mesh after the fact, or subdivide it
+  to the necessary detail level.  The form it took in my notes was in
+  sort of "growing" or "extruding" a mesh per these recursive rules,
+  building in these guarantees (some of them at least) by way of
+  inductive steps.
+
+  (TODO: Illustrate this somehow)
+
+  TODO while I'm not so tired:
+
+  - Summarize from prosha: this didn't fully work
+  - Summarize from python_extrude_meshgen?
+  - Much much easier to OpenSubdiv it

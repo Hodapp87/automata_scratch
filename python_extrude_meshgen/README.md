@@ -8,20 +8,20 @@
 - https://en.wikipedia.org/wiki/Polygon_triangulation - do this to
   fix my wave example!
   - http://www.polygontriangulation.com/2018/07/triangulation-algorithm.html
-- Clean up examples.ram_horn_branch(). The way I clean it up might
+- Clean up `examples.ram_horn_branch()`. The way I clean it up might
   help inform some cleaner designs.
 - I really need to standardize some of the behavior of fundamental
   operations (with regard to things like sizes they generate). This
   is behavior that, if it changes, will change a lot of things that I'm
   trying to keep consistent so that my examples still work.
-- Winding order.  It is consistent through seemingly
-  everything, except for reflection and close_boundary_simple.
-  (When there are two parallel boundaries joined with something like
-  join_boundary_simple, traversing these boundaries in their actual order
-  to generate triangles - like in close_boundary_simple - will produce
-  opposite winding order on each. Imagine a transparent clock: seen from the
-  front, it moves clockwise, but seen from the back, it moves
-  counter-clockwise.)
+- Winding order.  It is consistent through seemingly everything,
+  except for reflection and `close_boundary_simple`.  (When there are
+  two parallel boundaries joined with something like
+  `join_boundary_simple`, traversing these boundaries in their actual
+  order to generate triangles - like in `close_boundary_simple` - will
+  produce opposite winding order on each. Imagine a transparent clock:
+  seen from the front, it moves clockwise, but seen from the back, it
+  moves counter-clockwise.)
 - File that bug that I've seen in trimesh/three.js
   (see trimesh_fail.ipynb)
 - Why do I get the weird zig-zag pattern on the triangles,
@@ -39,7 +39,7 @@
     does seem to turn 'error' just to noise, and in its own way this
     is preferable.
 - Integrate parallel_transport work and reuse what I can
-- /mnt/dev/graphics_misc/isosurfaces_2018_2019 - perhaps include my
+- `/mnt/dev/graphics_misc/isosurfaces_2018_2019` - perhaps include my
   spiral isosurface stuff from here
 
 ## Abstractions

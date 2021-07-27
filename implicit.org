@@ -1,0 +1,22 @@
+* Slush-pile from implicit rant
+  (TODO: This was shelved from another post.  Do something with it.)
+  
+  None of my attempts have ever quite worked as soon as I start
+  dealing with implicit surfaces that have much sharpness to
+  them... which isn't saying much, since I am not exactly world-class
+  at dealing with meshes and mesh topology directly, but it's also
+  legitimately a very hard problem.  Even when I tried in CGAL, which
+  can handle implicit surfaces and does a far better job at generating
+  "good" meshes than anything I could hope to write myself, the
+  problem I ran into is that it was generating good meshes for
+  industrial CAD, not good meshes for /rendering/.  That is, their
+  inaccuracy to the true surface was bounded, and I could always
+  reduce it by just using denser meshes.  For CAD applications, this
+  seems fine. For rendering, though, I kept running into some major
+  inefficiencies in terms of number of triangles required (and as well
+  the amount of time required). I don't know much about the algorithms
+  they use, but I am fairly sure that for detail level N (inversely
+  proportional to minimum feature size) both triangle count, time, and
+  likely memory usage grow with ~O(N^3)~.
+
+  (TODO: Give an example of the above perhaps?)
