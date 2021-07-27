@@ -1,27 +1,10 @@
-
-* Brief history?
-  - I've done different forms of procedural graphics for awhile...
-  - POV-Ray is where I learned about implicit surfaces and some other
-    kinds of parametric geometry.
-  - At some point I discovered Context Free and Structure Synth.
-    (and synthopia blog and sphere tracing).
-  - I sort of pursued these as separate paths: implicit surfaces
-    (great for rendering methods like sphere tracing), and parametric
-    geometry (much easier to implement).
-  - It wasn't until about 2018 that I sketched out some ideas for
-    parametric 3D geometry - based loosely around Structure Synth -
-    and implemented some things.
-  - First this was some exploration of Parallel Frame Transport that
-    I'd read about via thi.ng, and then python_extrude_meshgen.
-  - Things I learned there become Prosha.
-  - Things I learned *there* are at my current unnamed work.
-
-* Brief history, written out more
+* This post needs a title
 
   (TODO: a note to me, reading later: you don't need to give your
   entire life story here.)
 
-  (TODO: pictures will make this post make a *lot* more sense)
+  (TODO: pictures will make this post make a *lot* more sense, and it
+  may need a lot of them)
 
   Context Free is one of my favorite projects since I discovered it
   about 2010.  It's one I've written about before (TODO: link to my
@@ -31,7 +14,8 @@
   couldn't, such as make it realtime and interactive, and sometimes
   because implementing its system of recursive grammars and
   replacement rules can be an excellent way to learn things in a new
-  language.
+  language.  (I think it's similar to [[https://en.wikipedia.org/wiki/L-system][L-systems]], but I haven't yet
+  learned those very well.)
 
   I've also played around in 3D graphics, particularly raytracing,
   since about 1999 in PolyRay and POV-Ray.  POV-Ray is probably what
@@ -64,16 +48,19 @@
   Implicit surfaces (or one of the many
   equivalent-except-for-when-it's-not names for this, e.g. F-Reps or
   distance bounds or SDFs or isosurfaces) handle almost all of this
-  well! They express CSG (TODO: link to CSG) operations, blending
-  shapes is easy, and they can be rendered directly on the GPU... see
-  [[http://blog.hvidtfeldts.net/][Syntopia]] again, or nearly anything by [[https://iquilezles.org/][Inigo Quilez]], or look up
-  raymarching and sphere tracing, or see [[https://ntopology.com/][nTopology]], or Matt Keeter's
-  work with [[https://www.libfive.com/][libfive]] and [[https://www.mattkeeter.com/research/mpr/][MPR]].  It's pure magic and it's wonderfully
-  elegant and I'll probably have many other posts on this.
+  well! They express CSG (TODO: link to CSG) operations, they can be
+  rendered directly on the GPU via shaders, operations like blending
+  shapes or twisting them are easy... for more on this, see [[http://blog.hvidtfeldts.net/][Syntopia]]
+  again, or nearly anything by [[https://iquilezles.org/][Inigo Quilez]], or look up raymarching
+  and sphere tracing, or see [[https://ntopology.com/][nTopology]], or Matt Keeter's work with
+  [[https://www.libfive.com/][libfive]] and [[https://www.mattkeeter.com/research/mpr/][MPR]].  They're pure magic and they're wonderfully elegant
+  and I'll probably have many other posts on them.
 
-  However, implicit surfaces still have one pretty big problem:
-  converting them to good meshes for rendering /is a huge pain/.  I
+  However, there is one big issue: turning implicit surfaces to good
+  meshes for rendering /is a huge pain/, and while many renderers can
+  handle implicit surfaces directly, Blender's renderers cannot. I
   have other posts on this as well, but for now, take it on faith.
+  This is why I did not try to use implicit surfaces for this project.
   (TODO: Make those posts.)
 
   With these limitations in mind, around 2018 June I had started
@@ -83,17 +70,95 @@
   mesh, triangle-by-triangle, in such a way that guaranteed that the
   resultant mesh had the desired detail level, was a manifold surface,
   and that it was otherwise a well-behaved mesh (e.g. no degenerate
-  triangles, no self-intersection, no high-degree vertices) - rather
-  than attempting to patch up the mesh after the fact, or subdivide it
-  to the necessary detail level.  The form it took in my notes was in
-  sort of "growing" or "extruding" a mesh per these recursive rules,
-  building in these guarantees (some of them at least) by way of
-  inductive steps.
+  triangles, no self-intersection, no high-degree vertices, no
+  triangles of extreme angles) - rather than attempting to patch up
+  the mesh after its creation, or subdividing it to the necessary
+  detail level.  For something similar to what I mean (though I didn't
+  have this in mind at the start), consider the [[https://en.wikipedia.org/wiki/Marching_squares][marching squares]]
+  algorithm, which is guaranteed to produce closed, manifold meshes.
 
   (TODO: Illustrate this somehow)
+  
+  The form it took in my notes was in sort of "growing" or "extruding"
+  a mesh per these recursive rules, building in these guarantees (some
+  of them at least) by way of inductive steps.
+
+  My meandering path to implementing it went something like this:
+
+  - Write some very ad-hoc Python to generate a mesh of a parametric
+    conversion of my annoying spiral isosurface from 2005 by breaking
+    it into planar "slices" or "frames", which move along the geometry
+    and then are connected together at corresponding vertices.
+  - Explore [[https://github.com/thi-ng/geom][thi.ng/geom]] and pretty quickly give up - but in the
+    process, discover [[https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.42.8103][Parallel Transport Approach to Curve Framing]].
+  - Implement that paper in Python, reusing the basic model from my
+    prior code. (See [[https://github.com/Hodapp87/parallel_transport][parallel_transport]])
+  - Again continue with this model, allowing more arbitrary operations
+    than parallel frame transport, eventually integrating most of what
+    I wanted with the recursive grammars.  (See
+    [[https://github.com/Hodapp87/automata_scratch/tree/master/python_extrude_meshgen][automata_scratch/python_extrude_meshgen]])
+  - Keep running into limitations in python_extrude_meshgen, and start
+    [[https://github.com/Hodapp87/prosha][Prosha]] in Rust - partly as a redesign/rewrite to avoid these
+    limitations, and partly because I just wanted to learn Rust.
+  - Realize that Rust is the wrong tool for the job, and rewrite
+    *again* in Python but with a rather different design and mindset.
+
+  (this is, of course, ignoring projects on various other tangents)
+
+  (TODO: Maybe split these off into sections for each one?)
+  
+  Somewhere in here, I concluded that my fundamental idea was
+  half-broken.  It half-worked: I was able to produce closed, manifold
+  meshes this way, and it could be tedious, but not *that* difficult.
+  However, all of my attempts to also produce "good" meshes this way
+  failed miserably.
+
+  (TODO: Can I find examples of this?)
+
+  A few of the same fundamental issues kept cropping up.  One is that
+  the recursive rules I used for generating geometry (inspired heavily
+  by those in Context Free) were inherently based around discrete
+  steps, generating discrete entities, like vertices, edges, and face;
+  it made no sense to "partially" apply a rule, especially if that
+  rule involved some kind of branching.  I kept trying to treat it as
+  something continuous for the sake of being able to "refine" the mesh
+  to as fine of detail as I wanted.  Further, I was almost never
+  consistent with the nature of this continuity: sometimes I wanted to
+  treat it like a parametric curve (one continuous parameter),
+  sometimes I wanted to treat it like a parametric surface (two
+  continuous parameters), sometimes I wanted to treat it like an
+  implicit surface (with... theoretically two continuous parameters,
+  just not explicit ones?).  It was a mess, and it's part of why my
+  Prosha repository is a graveyard of branches.
+
+  The recursive rules were still excellent at expressing arbitrarily
+  complex, branching geometry - and I really wanted to keep this basic
+  model around somehow.  After some reflection, I believed that the
+  only way to do this was to completely separate the process of
+  meshing/refinement/subdivision from the recursive rules.
+
+  This would have been obvious if I read the guides from [[https://graphics.pixar.com/opensubdiv/overview.html][OpenSubdiv]]
+  instead of reimplementing it badly.  Their [[https://graphics.pixar.com/opensubdiv/docs/subdivision_surfaces.html][subdivision surface]]
+  documentation covers a lot, but I found it incredibly clear and
+  readable.  Once I understood how OpenSubdiv was meant to be used, it
+  made a lot of sense: I shouldn't be trying to generate the "final"
+  mesh, I should be generating a mesh as the /control cage/, which
+  guides the final mesh.  Further, I didn't even need to bother with
+  OpenSubdiv's C++ API, I just needed to get the geometry into
+  Blender, and Blender would handle the subdivision via OpenSubdiv.
+
+  One minor issue is that this control cage isn't just a triangle
+  mesh, but a triangle mesh plus edge creases.  I needed a way to get
+  this data into Blender.  However, the only format Blender can read
+  edge creases from is [[http://www.alembic.io/][Alembic]].  Annoyingly, its [[http://docs.alembic.io/reference/index.html#alembic-intro][documentation]] is
+  almost completely nonexistent, the [[https://alembic.github.io/cask/][Cask]] bindings still have spotty
+  Python 3.x support, and when I tried to run their example code to
+  produce some files, and Blender was crashing when importing them.
+  Until I shave that yak, I am instead generating the mesh data
+  directly in Blender (via its Python interpreter), adding it to the
+  scene, and then setting its creases via its Python API.
 
   TODO while I'm not so tired:
 
-  - Summarize from prosha: this didn't fully work
-  - Summarize from python_extrude_meshgen?
-  - Much much easier to OpenSubdiv it
+  What is the aim of this post?  To explain Prosha?  To explain
+  current work, including Prosha?
