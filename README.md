@@ -3,6 +3,14 @@
 This is repo has a few projects that are related in terms of
 high-level goal, but almost completely unrelated in their descent.
 
+- `python_isosurfaces_2018_2019` is some Python & Maxima code from
+  2018-2019 from me trying to turn the usual spiral isosurface into a
+  parametric formula of sorts in order to triangulate it more
+  effectively.
+- `parallel_transport` is some Python code from 2019 September which
+  implemented parallel frame transport, i.e.
+  [Parallel Transport Approach to Curve Framing](https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.42.8103).  It is mostly scratch
+  code / proof-of-concept.
 - `python_extrude_meshgen` is some Python code from around 2019
   September which did a sort of extrusion-based code generation.
   While this had some good results and some good ideas, the basic
