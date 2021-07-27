@@ -1,0 +1,173 @@
+#+TITLE: CGAL dabbling
+#+DATE: <2018-08-06 Mon>
+#+AUTHOR: Hodapp
+#+EMAIL: hodapp87@gmail.com
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t c:nil creator:comment d:(not "LOGBOOK") date:t
+#+OPTIONS: e:t email:nil f:t inline:t num:t p:nil pri:nil stat:t
+#+OPTIONS: tags:t tasks:t tex:t timestamp:t toc:t todo:t |:t
+#+DESCRIPTION:
+#+EXCLUDE_TAGS: noexport
+#+KEYWORDS:
+#+LANGUAGE: en
+#+SELECT_TAGS: export
+
+# By default I do not want that source code blocks are evaluated on export. Usually
+# I want to evaluate them interactively and retain the original results.
+#+PROPERTY: header-args :eval never-export :export both
+
+- CGAL is one of the most insanely cryptic and impenetrable libraries
+  I have found.
+- Where I am stuck now:
+  - I can use 1D features in
+    [[https://doc.cgal.org/latest/Mesh_3/Mesh_3_2mesh_two_implicit_spheres_with_balls_8cpp-example.html][Mesh_3/mesh_two_implicit_spheres_with_balls.cpp]] but this is the
+    wrong sort of data (it's a 3D mesh, yes, but not a surface mesh)
+    and "medit" and "vtu" are all it can write.  How do I extract a
+    surface mesh to get a Polyhedron_3 so that I can write an OBJ?
+  - Or: Is there any way to use 1D features with a surface mesh?
+  - Even if I manage to put this Mesh_3 into the right form I have no
+    guarantees that it is a good surface mesh.  It uses a different
+    algorithm than for the surface mesh - I'm simply trying to take
+    the surface of the result.  I should also expect this algorithm to
+    be something more like O(N^3) with mesh resolution because it must
+    fill the volume with tetrahedrons, and I then just throw away all
+    of these.
+- This is based around the source for [[https://doc.cgal.org/latest/Mesh_3/Mesh_3_2mesh_implicit_sphere_8cpp-example.html][mesh_implicit_sphere.cpp]] from
+  [[https://doc.cgal.org/latest/Mesh_3/index.html][CGAL: 3D Mesh Generation]].
+- Why am I not using [[https://doc.cgal.org/latest/Mesh_3/group__PkgMesh__3Functions.html#ga68ca38989087644fb6b893eb566be9ea][facets_in_complex_3_to_triangle_mesh()]]?
+- [[https://doc.cgal.org/latest/Mesh_3/Mesh_3_2mesh_two_implicit_spheres_with_balls_8cpp-example.html][Mesh_3/mesh_two_implicit_spheres_with_balls.cpp]] shows the use of
+  [[https://doc.cgal.org/latest/Mesh_3/classCGAL_1_1Mesh__domain__with__polyline__features__3.html][Mesh_domain_with_polyline_features_3]] to explicitly give features to
+  preserve
+  - This uses the ~make_mesh_3~ call while I'm using
+    ~make_surface_mesh~...
+  - I can only call ~CGAL::print_polyhedron_wavefront~ if I have a
+    ~Polyhedron~ and I cannot figure out how to get one from a ~C3t3~.
+    So, perhaps I am stuck with this "medit" mesh format, or else VTU.
+  - I think the terminology is trying to tell me: this isn't a surface
+    mesh, it's a 3D mesh made of tetrahedra.  It sounds like the type
+    of data from a Delaunay triangulation is inherently rather
+    different from a surface mesh.
+  - https://doc.cgal.org/latest/Mesh_3/index.html#title24 does the
+    opposite direction of what I need
+- There are [[https://doc.cgal.org/latest/Polygon_mesh_processing/group__PMP__detect__features__grp.html][Feature Detection Functions]], but ~detect_features~ is in
+  [[https://doc.cgal.org/latest/Mesh_3/classCGAL_1_1Polyhedral__complex__mesh__domain__3.html][Polyhedral_complex_mesh_domain_3]] and
+  [[https://doc.cgal.org/latest/Mesh_3/classCGAL_1_1Polyhedral__mesh__domain__with__features__3.html#a5a868ac7b8673436766d28b7a80d2826][Polyhedral_mesh_domain_with_features_3]]
+- Domains:
+  - [[https://doc.cgal.org/latest/Mesh_3/classMeshDomain__3.html][MeshDomain_3]] concept
+  - [[https://doc.cgal.org/latest/Mesh_3/classMeshDomainWithFeatures__3.html][MeshDomainWithFeatures_3]] concept
+- Why make_surface_mesh, Implicit_surface_3,
+  Complex_2_in_triangulation_3 vs. make_mesh_3,
+  Implicit_mesh_domain_3, Mesh_complex_3_in_triangulation_3?
+- [[https://doc.cgal.org/latest/Mesh_3/group__PkgMesh3Parameters.html#ga0a990b28d55157c62d4bfd2624d408af][parameters::features()]] - can do 1-dimensional features
+  - now how do I use it?
+- [[https://doc.cgal.org/latest/Surface_mesher/index.html][make_surface_mesh]] args:
+  - ~SurfaceMeshC2T3& c2t3~ - must be a model of concept [[https://doc.cgal.org/latest/Surface_mesher/classSurfaceMeshComplex__2InTriangulation__3.html][SurfaceMeshComplex_2InTriangulation_3]]
+  - ~SurfaceMeshTraits::Surface_3 surface~ - must be a model of concept [[https://doc.cgal.org/latest/Surface_mesher/classSurface__3.html][Surface_3]]
+  - ~SurfaceMeshTraits traits~ - must be a model of concept [[https://doc.cgal.org/latest/Surface_mesher/classSurfaceMeshTraits__3.html][SurfaceMeshTraits_3]]
+  - ~FacetsCriteria criteria~ - must be a model of concept [[https://doc.cgal.org/latest/Surface_mesher/classSurfaceMeshFacetsCriteria__3.html][SurfaceMeshFacetsCriteria_3]]
+  - ~Tag~
+- "This algorithm of CGAL::make_surface_mesh is designed for smooth
+  implicit surfaces. If your implicit surface is not smooth, then the
+  sharp features of the surface will not be meshed correctly."
+
+#+BEGIN_SRC elisp
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-src-fontify-natively t)
+  (setq org-src-tab-acts-natively t)
+  (org-version)
+#+END_SRC
+
+#+RESULTS:
+: 9.1.9
+
+#+BEGIN_SRC sh :results verbatim
+  gcc --version
+#+END_SRC
+
+#+RESULTS:
+: Apple LLVM version 9.1.0 (clang-902.0.39.2)
+: Target: x86_64-apple-darwin17.7.0
+: Thread model: posix
+: InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+
+#+NAME: includes
+#+BEGIN_SRC C++
+  #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+
+  #include <CGAL/Mesh_triangulation_3.h>
+  #include <CGAL/Mesh_complex_3_in_triangulation_3.h>
+  #include <CGAL/Mesh_criteria_3.h>
+
+  #include <CGAL/Implicit_mesh_domain_3.h>
+  #include <CGAL/make_mesh_3.h>
+#+END_SRC
+
+#+NAME: typesDomain
+#+BEGIN_SRC C++
+  typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+  typedef K::FT FT;
+  typedef K::Point_3 Point;
+  typedef FT (Function)(const Point&);
+  typedef CGAL::Implicit_mesh_domain_3<Function,K> Mesh_domain;
+
+  #ifdef CGAL_CONCURRENT_MESH_3
+  typedef CGAL::Parallel_tag Concurrency_tag;
+  #else
+  typedef CGAL::Sequential_tag Concurrency_tag;
+  #endif
+#+END_SRC
+
+#+NAME: typesTriangulation
+#+BEGIN_SRC C++
+  typedef CGAL::Mesh_triangulation_3<Mesh_domain,CGAL::Default,Concurrency_tag>::type Tr;
+  typedef CGAL::Mesh_complex_3_in_triangulation_3<Tr> C3t3;
+#+END_SRC
+
+#+NAME: typesCriteria
+#+BEGIN_SRC C++
+  typedef CGAL::Mesh_criteria_3<Tr> Mesh_criteria;
+#+END_SRC
+
+#+NAME: sphereFunction
+#+BEGIN_SRC C++
+  FT sphere_function (const Point& p) {
+      return CGAL::squared_distance(p, Point(CGAL::ORIGIN))-1;
+  }
+#+END_SRC
+
+#+BEGIN_SRC C++ :noweb yes :flags  -L/usr/local/Cellar/cgal/4.12/lib -I/usr/local/Cellar/cgal/4.12/include  -L/usr/local/Cellar/gmp/6.1.2_2/lib  -L/usr/local/Cellar/mpfr/4.0.1/lib  -L/usr/local/Cellar/boost/1.67.0_1/lib  -DCGAL_CONCURRENT_MESH_3  -lCGAL -lgmp -lmpfr -lboost_thread-mt
+  <<includes>>
+
+  using namespace CGAL::parameters;
+
+  <<typesDomain>>
+  <<typesTriangulation>>
+  <<typesCriteria>>
+  <<sphereFunction>>
+
+  int main()
+  {
+      // Domain (Warning: Sphere_3 constructor uses squared radius !)
+      Mesh_domain domain(sphere_function,
+                         K::Sphere_3(CGAL::ORIGIN, 2.));
+      // Mesh criteria
+      Mesh_criteria criteria(facet_angle=30, facet_size=0.1, facet_distance=0.025,
+                             cell_radius_edge_ratio=2, cell_size=0.1);
+
+      std::cout << "Generating..." << std::endl;
+      // Mesh generation
+      C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria);
+
+      // Output
+      std::ofstream medit_file("out.mesh");
+      c3t3.output_to_medit(medit_file);
+
+      std::cout << "Done" << std::endl;
+
+      return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+| Generating... |
+| Done          |
