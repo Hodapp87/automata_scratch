@@ -164,11 +164,3 @@ k = curv_fn(np.zeros((tri_mids.shape[0], 3, 2)), pt_center=tri_mids, u=v1, v=v2)
 
 print(f"writing")
 np.save("spiral_curvature.npy", k)
-
-# for i,k_i in enumerate(k):
-#     for j in range(k.shape[1]):
-#         mid = tri_mids[i, j, :]
-#         k_ij = k[i,j]
-#         v1 = tris[i][j]
-#         v2 = tris[i][(j + 1) % 3]
-#         print(f"{i}: {v1} to {v2}, {k_ij:.3f}")

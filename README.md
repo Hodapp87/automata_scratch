@@ -48,5 +48,4 @@ ceased to have much to do with automata.
 ## Projects not covered here
 
 - curl-noise work (both in Clojure and in Python/vispy)
-- parallel transport
 - prosha, of course
